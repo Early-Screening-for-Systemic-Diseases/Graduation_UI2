@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:injectable/injectable.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/error/api_error_handler.dart';
@@ -14,6 +15,8 @@ class PredictionApiDataSource implements PredictionRemoteDataSource {
   final Dio _predictDio;
   final Dio _anemiaDio;
   final Dio _anemiaSurveyDio;
+  final Dio _skinCancerDio;
+  final Dio _skinCancerSurveyDio;
   final Dio _textPredictDio;
 
   PredictionApiDataSource(
@@ -21,20 +24,39 @@ class PredictionApiDataSource implements PredictionRemoteDataSource {
     @Named('PredictDio') this._predictDio,
     @Named('AnemiaDio') this._anemiaDio,
     @Named('AnemiaSurveyDio') this._anemiaSurveyDio,
+    @Named('SkinCancerDio') this._skinCancerDio,
+    @Named('SkinCancerSurveyDio') this._skinCancerSurveyDio,
     @Named('TextPredictDio') this._textPredictDio,
   );
+
+  Future<MultipartFile> _rawMultipart(File imageFile) async {
+    final bytes = await imageFile.readAsBytes();
+    final filename = imageFile.path.split(RegExp(r'[\\/]')).last;
+    print('[Image] file: $filename | size: ${bytes.length} bytes | first10bytes: ${bytes.take(10).toList()}');
+    return MultipartFile.fromBytes(
+      bytes,
+      filename: filename,
+      contentType: MediaType('application', 'octet-stream'),
+    );
+  }
+
+  void _logRequest(Dio dio, String endpoint, FormData formData) {
+    print('[Request] POST ${dio.options.baseUrl}$endpoint');
+    print('[Request] Headers: ${dio.options.headers}');
+    print('[Request] Fields: ${formData.fields}');
+    print('[Request] Files: ${formData.files.map((f) => '${f.key}=${f.value.filename}(${f.value.length}b)').toList()}');
+  }
 
   @override
   Future<PredictionResponse> predictImage(File imageFile) async {
     try {
-      final formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(imageFile.path, filename: 'image.jpg'),
-      });
-
+      final formData = FormData.fromMap({'file': await _rawMultipart(imageFile)});
+      _logRequest(_mainDio, ApiEndpoints.diabetesPredict, formData);
       final response = await _mainDio.post(ApiEndpoints.diabetesPredict, data: formData);
-
+      print('[Diabetes Image] Response: ${response.data}');
       return PredictionResponse.fromJson(response.data);
     } on DioException catch (e) {
+      print('[Diabetes Image] Error: ${e.response?.statusCode} ${e.response?.data}');
       throw ApiErrorHandler.handleDioError(e);
     }
   }
@@ -42,13 +64,13 @@ class PredictionApiDataSource implements PredictionRemoteDataSource {
   @override
   Future<PredictionResponse> predictHealthData(HealthDataModel healthData) async {
     try {
-      final response = await _predictDio.post(
-        ApiEndpoints.diabetesPredict,
-        data: healthData.toJson(),
-      );
-      print(response.data);
+      final body = healthData.toJson();
+      print('Diabetes Survey Request: $body');
+      final response = await _predictDio.post(ApiEndpoints.diabetesPredict, data: body);
+      print('Diabetes Survey Response: ${response.data}');
       return PredictionResponse.fromJson(response.data);
     } on DioException catch (e) {
+      print('Diabetes Survey Error: ${e.response?.statusCode} ${e.response?.data}');
       throw ApiErrorHandler.handleDioError(e);
     }
   }
@@ -56,15 +78,13 @@ class PredictionApiDataSource implements PredictionRemoteDataSource {
   @override
   Future<PredictionResponse> predictAnemiaImage(File imageFile) async {
     try {
-      final formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(imageFile.path, filename: 'image.jpg'),
-      });
-
+      final formData = FormData.fromMap({'file': await _rawMultipart(imageFile)});
+      _logRequest(_anemiaDio, ApiEndpoints.anemiaPredict, formData);
       final response = await _anemiaDio.post(ApiEndpoints.anemiaPredict, data: formData);
-      print('Anemia API Response: ${response.data}');
-
+      print('[Anemia Image] Response: ${response.data}');
       return PredictionResponse.fromJson(response.data);
     } on DioException catch (e) {
+      print('[Anemia Image] Error: ${e.response?.statusCode} ${e.response?.data}');
       throw ApiErrorHandler.handleDioError(e);
     }
   }
@@ -84,12 +104,37 @@ class PredictionApiDataSource implements PredictionRemoteDataSource {
   }
 
   @override
+  Future<PredictionResponse> predictSkinCancerImage(File imageFile) async {
+    try {
+      final formData = FormData.fromMap({'file': await _rawMultipart(imageFile)});
+      _logRequest(_skinCancerDio, ApiEndpoints.skinCancerPredict, formData);
+      final response = await _skinCancerDio.post(ApiEndpoints.skinCancerPredict, data: formData);
+      print('[SkinCancer Image] Response: ${response.data}');
+      return PredictionResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      print('[SkinCancer Image] Error: ${e.response?.statusCode} ${e.response?.data}');
+      throw ApiErrorHandler.handleDioError(e);
+    }
+  }
+
+  @override
+  Future<PredictionResponse> predictSkinCancerSurvey(Map<String, dynamic> surveyData) async {
+    try {
+      final response = await _skinCancerSurveyDio.post(
+        ApiEndpoints.skinCancerSurveyPredict,
+        data: surveyData,
+      );
+      print('Skin Cancer Survey Response: ${response.data}');
+      return PredictionResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioError(e);
+    }
+  }
+
+  @override
   Future<TextPredictionResponse> predictFromText(String text) async {
     try {
-      final response = await _textPredictDio.post(
-        ApiEndpoints.textPredict,
-        data: {'text': text},
-      );
+      final response = await _textPredictDio.post(ApiEndpoints.textPredict, data: {'text': text});
       return TextPredictionResponse.fromJson(response.data);
     } on DioException catch (e) {
       throw ApiErrorHandler.handleDioError(e);

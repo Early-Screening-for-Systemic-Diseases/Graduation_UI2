@@ -100,6 +100,49 @@ class PredictionRepository {
     }
   }
 
+  Future<Either<Failure, PredictionResponse>> predictSkinCancerImage(
+    File imageFile,
+    String imageUrl,
+  ) async {
+    try {
+      final response = await _dataSource.predictSkinCancerImage(imageFile);
+      final userId = _auth.currentUser?.uid;
+      if (userId != null) {
+        final record = SkinCancerRecord(
+          imageUrl: imageUrl,
+          predictedClass: response.prediction,
+          confidence: response.probability,
+          timestamp: DateTime.now(),
+        );
+        await _firebaseDataSource.addSkinCancerRecord(userId, record);
+      }
+      return Right(response);
+    } on RemoteException catch (e) {
+      return Left(Failure(e.message));
+    }
+  }
+
+  Future<Either<Failure, PredictionResponse>> predictSkinCancerSurvey(
+    Map<String, dynamic> surveyData,
+  ) async {
+    try {
+      final response = await _dataSource.predictSkinCancerSurvey(surveyData);
+      final userId = _auth.currentUser?.uid;
+      if (userId != null) {
+        final survey = SkinCancerSurvey(
+          riskLevel: response.prediction,
+          riskScore: response.probability,
+          timestamp: DateTime.now(),
+          surveyData: surveyData,
+        );
+        await _firebaseDataSource.addSkinCancerSurvey(userId, survey);
+      }
+      return Right(response);
+    } on RemoteException catch (e) {
+      return Left(Failure(e.message));
+    }
+  }
+
   Future<Either<Failure, TextPredictionResponse>> predictFromText(String text) async {
     try {
       final response = await _dataSource.predictFromText(text);
@@ -107,5 +150,35 @@ class PredictionRepository {
     } on RemoteException catch (e) {
       return Left(Failure(e.message));
     }
+  }
+
+  Future<void> saveCombinedResult({
+    required String disease,
+    required String textDescription,
+    required Map<String, dynamic> imageRecord,
+    required Map<String, dynamic> surveyRecord,
+    required Map<String, dynamic> nlpRecord,
+    required double finalScore,
+    required double imgScore,
+    required double surveyScore,
+    required double nlpScore,
+  }) async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return;
+    await _firebaseDataSource.addCombinedResult(
+      userId,
+      CombinedAnalysisResult(
+        disease: disease,
+        textDescription: textDescription,
+        imageRecord: imageRecord,
+        surveyRecord: surveyRecord,
+        nlpRecord: nlpRecord,
+        finalScore: finalScore,
+        imgScore: imgScore,
+        surveyScore: surveyScore,
+        nlpScore: nlpScore,
+        timestamp: DateTime.now(),
+      ),
+    );
   }
 }
