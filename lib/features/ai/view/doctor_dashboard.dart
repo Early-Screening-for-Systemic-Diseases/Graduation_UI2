@@ -10,6 +10,7 @@ import '../../auth/data/models/user_model.dart';
 import '../../auth/presentation/cubit/auth_hydrated_cubit.dart';
 import '../../auth/presentation/cubit/auth_state.dart';
 import '../../auth/presentation/view/login.dart';
+import '../../chat/chat_list_screen.dart';
 
 class DoctorDashboard extends StatefulWidget {
   const DoctorDashboard({super.key});
@@ -19,6 +20,86 @@ class DoctorDashboard extends StatefulWidget {
 }
 
 class _DoctorDashboardState extends State<DoctorDashboard> {
+  int _selectedIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final screens = [_PatientsTab(), const ChatListScreen()];
+    return Scaffold(
+      backgroundColor: const Color(0xFF0A0E1A),
+      body: screens[_selectedIndex],
+      bottomNavigationBar: Container(
+        margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+        decoration: BoxDecoration(
+          color: const Color(0xFF111827),
+          borderRadius: BorderRadius.circular(28.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _NavItem(icon: Icons.people_alt_rounded, label: 'Patients', selected: _selectedIndex == 0, onTap: () => setState(() => _selectedIndex = 0)),
+            _NavItem(icon: Icons.chat_bubble_outline_rounded, label: 'Chat', selected: _selectedIndex == 1, onTap: () => setState(() => _selectedIndex = 1)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const _NavItem({required this.icon, required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        padding: EdgeInsets.symmetric(horizontal: selected ? 18.w : 12.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFF00E5FF) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: selected ? const Color(0xFF0A0E1A) : Colors.grey, size: 22.sp),
+            if (selected) ...[
+              SizedBox(width: 6.w),
+              Text(label,
+                  style: TextStyle(
+                      color: const Color(0xFF0A0E1A),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13.sp)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Patients Tab ──────────────────────────────────────────────────────────────
+
+class _PatientsTab extends StatefulWidget {
+  @override
+  State<_PatientsTab> createState() => _PatientsTabState();
+}
+
+class _PatientsTabState extends State<_PatientsTab> {
   final _dataSource = getIt<FirebaseAuthDataSource>();
   late Future<List<UserModel>> _future;
   String _search = '';
@@ -47,50 +128,50 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E1A),
       appBar: _buildAppBar(context),
-        body: Column(
-          children: [
-            _buildSearchBar(),
-            Expanded(
-              child: FutureBuilder<List<UserModel>>(
-                future: _future,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator(color: Color(0xFF00E5FF)));
-                  }
-                  final patients = (snapshot.data ?? []).where((p) {
-                    if (_search.isEmpty) return true;
-                    return p.name.toLowerCase().contains(_search.toLowerCase()) ||
-                        p.email.toLowerCase().contains(_search.toLowerCase());
-                  }).toList();
+      body: Column(
+        children: [
+          _buildSearchBar(),
+          Expanded(
+            child: FutureBuilder<List<UserModel>>(
+              future: _future,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator(color: Color(0xFF00E5FF)));
+                }
+                final patients = (snapshot.data ?? []).where((p) {
+                  if (_search.isEmpty) return true;
+                  return p.name.toLowerCase().contains(_search.toLowerCase()) ||
+                      p.email.toLowerCase().contains(_search.toLowerCase());
+                }).toList();
 
-                  if (patients.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.people_outline_rounded, color: Colors.white24, size: 52.sp),
-                          SizedBox(height: 12.h),
-                          Text('No patients found', style: TextStyle(color: Colors.white38, fontSize: 14.sp)),
-                        ],
-                      ),
-                    );
-                  }
-
-                  return ListView.separated(
-                    padding: EdgeInsets.all(16.w),
-                    itemCount: patients.length,
-                    separatorBuilder: (_, __) => SizedBox(height: 10.h),
-                    itemBuilder: (_, i) => _PatientTile(
-                      patient: patients[i],
-                      dataSource: _dataSource,
-                      onFeedbackSaved: _reload,
+                if (patients.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.people_outline_rounded, color: Colors.white24, size: 52.sp),
+                        SizedBox(height: 12.h),
+                        Text('No patients found', style: TextStyle(color: Colors.white38, fontSize: 14.sp)),
+                      ],
                     ),
                   );
-                },
-              ),
+                }
+
+                return ListView.separated(
+                  padding: EdgeInsets.all(16.w),
+                  itemCount: patients.length,
+                  separatorBuilder: (_, __) => SizedBox(height: 10.h),
+                  itemBuilder: (_, i) => _PatientTile(
+                    patient: patients[i],
+                    dataSource: _dataSource,
+                    onFeedbackSaved: _reload,
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -114,7 +195,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
             child: Icon(Icons.medical_services_rounded, color: const Color(0xFF00E5FF), size: 18.sp),
           ),
           SizedBox(width: 10.w),
-          Text('Doctor Dashboard',
+          Text('Patients',
               style: TextStyle(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.w700)),
         ],
       ),

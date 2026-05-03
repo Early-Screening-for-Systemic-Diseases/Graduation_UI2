@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../chat/chat_list_screen.dart';
 import 'analysis_screen.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
@@ -14,11 +15,12 @@ class MedicalNavBar extends StatefulWidget {
 class _MedicalNavBarState extends State<MedicalNavBar> {
   int _selectedIndex = 0;
 
-  final List<Widget> _screens = const [HomeScreen(), AnalysisScreen(), ProfileScreen()];
+  final List<Widget> _screens = const [HomeScreen(), AnalysisScreen(), ChatListScreen(), ProfileScreen()];
 
   static const _items = [
     (icon: Icons.home_rounded, label: 'Home'),
     (icon: Icons.bar_chart_rounded, label: 'Analysis'),
+    (icon: Icons.chat_bubble_outline_rounded, label: 'Chat'),
     (icon: Icons.person_rounded, label: 'Profile'),
   ];
 
