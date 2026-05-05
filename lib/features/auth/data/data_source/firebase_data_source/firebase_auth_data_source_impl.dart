@@ -137,7 +137,7 @@ class FirebaseAuthDataSourceImpl implements FirebaseAuthDataSource {
   }
 
   @override
-  Future<void> saveDoctorFeedback(String patientId, String timestamp, String feedback) async {
+  Future<void> saveDoctorFeedback(String patientId, String timestamp, String feedback, String doctorId) async {
     final doc = await _collectionForRole('patient').doc(patientId).get();
     if (!doc.exists) return;
     final results = List<Map<String, dynamic>>.from(
@@ -146,6 +146,7 @@ class FirebaseAuthDataSourceImpl implements FirebaseAuthDataSource {
     final index = results.indexWhere((r) => r['timestamp'] == timestamp);
     if (index == -1) return;
     results[index]['doctorFeedback'] = feedback;
+    results[index]['doctorId'] = doctorId;
     await _collectionForRole('patient').doc(patientId).update({'combinedResults': results});
   }
 

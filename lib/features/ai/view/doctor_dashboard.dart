@@ -11,6 +11,7 @@ import '../../auth/presentation/cubit/auth_hydrated_cubit.dart';
 import '../../auth/presentation/cubit/auth_state.dart';
 import '../../auth/presentation/view/login.dart';
 import '../../chat/chat_list_screen.dart';
+import '../../chat/rating_widget.dart';
 
 class DoctorDashboard extends StatefulWidget {
   const DoctorDashboard({super.key});
@@ -313,6 +314,8 @@ class _PatientTile extends StatelessWidget {
                       style: TextStyle(
                           color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14.sp)),
                   SizedBox(height: 2.h),
+                  RatingWidget(userId: patient.id),
+                  SizedBox(height: 2.h),
                   Text(patient.email,
                       style: TextStyle(color: Colors.white38, fontSize: 11.sp),
                       overflow: TextOverflow.ellipsis),
@@ -505,10 +508,12 @@ class _ResultCardState extends State<_ResultCard> {
 
   Future<void> _saveFeedback() async {
     setState(() => _saving = true);
+    final doctorId = context.read<AuthCubit>().currentUser?.id ?? '';
     await widget.dataSource.saveDoctorFeedback(
       widget.patientId,
       widget.result.timestamp.toIso8601String(),
       _feedbackController.text.trim(),
+      doctorId,
     );
     setState(() {
       _saving = false;

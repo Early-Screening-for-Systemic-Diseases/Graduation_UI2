@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import '../../../features/auth/data/models/user_model.dart';
+import '../../chat/rating_widget.dart';
 
 class AnalysisHistoryScreen extends StatefulWidget {
   final String disease;
@@ -23,28 +24,23 @@ class AnalysisHistoryScreen extends StatefulWidget {
 }
 
 class _AnalysisHistoryScreenState extends State<AnalysisHistoryScreen> {
-  late Future<List<CombinedAnalysisResult>> _future;
 
-  @override
-  void initState() {
-    super.initState();
-    _future = _fetchHistory();
-  }
-
-  Future<List<CombinedAnalysisResult>> _fetchHistory() async {
+  Stream<List<CombinedAnalysisResult>> _historyStream() {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return [];
-    final doc = await FirebaseFirestore.instance
+    if (uid == null) return Stream.value([]);
+    return FirebaseFirestore.instance
         .collection('patients')
         .doc(uid)
-        .get();
-    if (!doc.exists) return [];
-    final raw = (doc.data()?['combinedResults'] as List<dynamic>?) ?? [];
-    return raw
-        .map((e) => CombinedAnalysisResult.fromJson(Map<String, dynamic>.from(e)))
-        .where((r) => r.disease.toLowerCase() == widget.disease.toLowerCase())
-        .toList()
-      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+        .snapshots()
+        .map((doc) {
+      if (!doc.exists) return [];
+      final raw = (doc.data()?['combinedResults'] as List<dynamic>?) ?? [];
+      return raw
+          .map((e) => CombinedAnalysisResult.fromJson(Map<String, dynamic>.from(e)))
+          .where((r) => r.disease.toLowerCase() == widget.disease.toLowerCase())
+          .toList()
+        ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    });
   }
 
   @override
@@ -102,8 +98,8 @@ class _AnalysisHistoryScreenState extends State<AnalysisHistoryScreen> {
             ),
           ),
           SliverFillRemaining(
-            child: FutureBuilder<List<CombinedAnalysisResult>>(
-              future: _future,
+            child: StreamBuilder<List<CombinedAnalysisResult>>(
+              stream: _historyStream(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator(color: widget.color));
@@ -541,6 +537,25 @@ class _HistoryDetailScreen extends StatelessWidget {
             ),
           ),
 
+          // ── Doctor Feedback ──
+          if (result.doctorFeedback.isNotEmpty)
+            _DetailSection(
+              title: 'Doctor Feedback',
+              icon: Icons.medical_services_rounded,
+              color: color,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    result.doctorFeedback,
+                    style: TextStyle(fontSize: 13.sp, color: Colors.grey.shade700, height: 1.6),
+                  ),
+                  SizedBox(height: 12.h),
+                  _DoctorRatingRow(doctorId: result.doctorId),
+                ],
+              ),
+            ),
+
           SizedBox(height: 30.h),
         ],
       ),
@@ -654,5 +669,103 @@ class _KVRow extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// ── Doctor Rating Row ────────────────────────────────────────────────────────────
+
+class _DoctorRatingRow extends StatelessWidget {
+  final String doctorId;
+  const _DoctorRatingRow({required this.doctorId});
+
+  @override
+  Widget build(BuildContext context) {
+    if (doctorId.isNotEmpty) {
+      return _RatingRow(doctorId: doctorId);
+    }
+    // Fallback for old results: fetch all doctors and show each one's rating
+    return FutureBuilder<QuerySnapshot>(
+      future: FirebaseFirestore.instance.collection('doctors').get(),
+      builder: (context, snap) {
+        if (!snap.hasData || snap.data!.docs.isEmpty) {
+          return _RatingRow(doctorId: '');
+        }
+        // Use the document ID (which is the UID) directly
+        final id = snap.data!.docs.first.id;
+        return _RatingRow(doctorId: id);
+      },
+    );
+  }
+}
+
+class _RatingRow extends StatelessWidget {
+  final String doctorId;
+  const _RatingRow({required this.doctorId});
+
+  @override
+  Widget build(BuildContext context) {
+    if (doctorId.isEmpty) {
+      return _ratingContainer(
+        stars: List.generate(5, (i) => Icon(Icons.star_border_rounded, color: const Color(0xFFFFD700), size: 14.sp)),
+        label: 'No ratings yet',
+      );
+    }
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('ratings')
+          .doc(doctorId)
+          .collection('reviews')
+          .snapshots(),
+      builder: (context, snap) {
+        if (!snap.hasData) {
+          return _ratingContainer(
+            stars: [SizedBox(width: 14.w, height: 14.w, child: const CircularProgressIndicator(strokeWidth: 2))],
+            label: '',
+          );
+        }
+        final docs = snap.data!.docs;
+        if (docs.isEmpty) {
+          return _ratingContainer(
+            stars: List.generate(5, (i) => Icon(Icons.star_border_rounded, color: const Color(0xFFFFD700), size: 14.sp)),
+            label: 'No ratings yet',
+          );
+        }
+        final avg = docs
+            .map((d) => (d['rating'] as num).toDouble())
+            .reduce((a, b) => a + b) / docs.length;
+        return _ratingContainer(
+          stars: List.generate(5, (i) => Icon(
+            i < avg.round() ? Icons.star_rounded : Icons.star_border_rounded,
+            color: const Color(0xFFFFD700),
+            size: 14.sp,
+          )),
+          label: '${avg.toStringAsFixed(1)} (${docs.length})',
+        );
+      },
+    );
+  }
+
+  Widget _ratingContainer({required List<Widget> stars, required String label}) {
+    return Builder(builder: (context) => Container(
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFD700).withOpacity(0.08),
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.medical_services_rounded, size: 13.sp, color: Colors.grey),
+          SizedBox(width: 6.w),
+          Text('Doctor rating: ', style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600)),
+          ...stars,
+          if (label.isNotEmpty) ...[
+            SizedBox(width: 4.w),
+            Text(label, style: TextStyle(fontSize: 11.sp, color: Colors.grey)),
+          ],
+        ],
+      ),
+    ));
   }
 }

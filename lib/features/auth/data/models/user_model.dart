@@ -193,6 +193,7 @@ class CombinedAnalysisResult {
   final double surveyScore;
   final double nlpScore;
   final String doctorFeedback;
+  final String doctorId;
   final DateTime timestamp;
 
   const CombinedAnalysisResult({
@@ -206,6 +207,7 @@ class CombinedAnalysisResult {
     required this.surveyScore,
     required this.nlpScore,
     this.doctorFeedback = '',
+    this.doctorId = '',
     required this.timestamp,
   });
 
@@ -221,6 +223,7 @@ class CombinedAnalysisResult {
       surveyScore: (json['surveyScore'] ?? 0.0).toDouble(),
       nlpScore: (json['nlpScore'] ?? 0.0).toDouble(),
       doctorFeedback: json['doctorFeedback'] ?? '',
+      doctorId: json['doctorId'] ?? '',
       timestamp: DateTime.parse(json['timestamp']),
     );
   }
@@ -236,6 +239,7 @@ class CombinedAnalysisResult {
         'surveyScore': surveyScore,
         'nlpScore': nlpScore,
         'doctorFeedback': doctorFeedback,
+        'doctorId': doctorId,
         'timestamp': timestamp.toIso8601String(),
       };
 }

@@ -98,6 +98,8 @@ class _PatientChatList extends StatelessWidget {
             return _ChatTile(
               name: doctorName,
               subtitle: data['email'] as String? ?? '',
+              rateeId: doctorId,
+              raterId: patientId,
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -155,6 +157,8 @@ class _DoctorChatList extends StatelessWidget {
             return _ChatTile(
               name: patientName,
               subtitle: email,
+              rateeId: patientId,
+              raterId: doctorId,
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -179,12 +183,92 @@ class _DoctorChatList extends StatelessWidget {
 class _ChatTile extends StatelessWidget {
   final String name;
   final String subtitle;
+  final String rateeId;
+  final String raterId;
   final VoidCallback onTap;
 
-  const _ChatTile(
-      {required this.name,
-      required this.subtitle,
-      required this.onTap});
+  const _ChatTile({
+    required this.name,
+    required this.subtitle,
+    required this.rateeId,
+    required this.raterId,
+    required this.onTap,
+  });
+
+  Future<void> _showRatingDialog(BuildContext context) async {
+    int selected = 0;
+
+    // load existing rating
+    final existing = await FirebaseFirestore.instance
+        .collection('ratings')
+        .doc(rateeId)
+        .collection('reviews')
+        .doc(raterId)
+        .get();
+    if (existing.exists) selected = (existing.data()?['rating'] ?? 0) as int;
+
+    if (!context.mounted) return;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) => AlertDialog(
+          backgroundColor: const Color(0xFF1A2235),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+          title: Text('Rate $name',
+              style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.w600)),
+          content: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(5, (i) {
+              final star = i + 1;
+              return GestureDetector(
+                onTap: () => setState(() => selected = star),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: Icon(
+                    selected >= star ? Icons.star_rounded : Icons.star_border_rounded,
+                    color: const Color(0xFFFFD700),
+                    size: 36.sp,
+                  ),
+                ),
+              );
+            }),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('Cancel', style: TextStyle(color: Colors.white38, fontSize: 13.sp)),
+            ),
+            GestureDetector(
+              onTap: () async {
+                if (selected == 0) return;
+                await FirebaseFirestore.instance
+                    .collection('ratings')
+                    .doc(rateeId)
+                    .collection('reviews')
+                    .doc(raterId)
+                    .set({'rating': selected, 'timestamp': FieldValue.serverTimestamp()});
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00E5FF).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: const Color(0xFF00E5FF).withOpacity(0.5)),
+                ),
+                child: Text('Submit',
+                    style: TextStyle(
+                        color: const Color(0xFF00E5FF),
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w600)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -201,8 +285,7 @@ class _ChatTile extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 22.r,
-              backgroundColor:
-                  const Color(0xFF00E5FF).withOpacity(0.1),
+              backgroundColor: const Color(0xFF00E5FF).withOpacity(0.1),
               child: Text(
                 name.isNotEmpty ? name[0].toUpperCase() : '?',
                 style: TextStyle(
@@ -221,17 +304,59 @@ class _ChatTile extends StatelessWidget {
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
                           fontSize: 14.sp)),
+                  SizedBox(height: 3.h),
+                  StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('ratings')
+                        .doc(rateeId)
+                        .collection('reviews')
+                        .snapshots(),
+                    builder: (context, snap) {
+                      if (!snap.hasData || snap.data!.docs.isEmpty) {
+                        return Text('No ratings yet',
+                            style: TextStyle(color: Colors.white38, fontSize: 11.sp));
+                      }
+                      final docs = snap.data!.docs;
+                      final avg = docs
+                              .map((d) => (d['rating'] as num).toDouble())
+                              .reduce((a, b) => a + b) /
+                          docs.length;
+                      return Row(
+                        children: [
+                          Icon(Icons.star_rounded,
+                              color: const Color(0xFFFFD700), size: 13.sp),
+                          SizedBox(width: 3.w),
+                          Text('${avg.toStringAsFixed(1)} (${docs.length})',
+                              style: TextStyle(
+                                  color: Colors.white54, fontSize: 11.sp)),
+                        ],
+                      );
+                    },
+                  ),
                   if (subtitle.isNotEmpty) ...[
-                    SizedBox(height: 3.h),
+                    SizedBox(height: 2.h),
                     Text(subtitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                            color: Colors.white38, fontSize: 12.sp)),
+                        style: TextStyle(color: Colors.white38, fontSize: 11.sp)),
                   ],
                 ],
               ),
             ),
+            GestureDetector(
+              onTap: () => _showRatingDialog(context),
+              child: Container(
+                padding: EdgeInsets.all(8.w),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFD700).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.4)),
+                ),
+                child: Icon(Icons.star_rounded,
+                    color: const Color(0xFFFFD700), size: 18.sp),
+              ),
+            ),
+            SizedBox(width: 8.w),
             Icon(Icons.arrow_forward_ios_rounded,
                 color: Colors.white24, size: 14.sp),
           ],

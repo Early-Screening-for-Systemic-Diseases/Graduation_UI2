@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'rating_widget.dart';
 
 class ChatScreen extends StatefulWidget {
   final String currentUserId;
@@ -99,11 +100,17 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             SizedBox(width: 10.w),
-            Text(widget.otherUserName,
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600)),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.otherUserName,
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600)),
+                RatingWidget(userId: widget.otherUserId),
+              ],
+            ),
           ],
         ),
         bottom: PreferredSize(

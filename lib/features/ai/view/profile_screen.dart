@@ -6,6 +6,7 @@ import '../../../features/auth/domain/entities/user_entity.dart';
 import '../../../features/auth/presentation/cubit/auth_hydrated_cubit.dart';
 import '../../../features/auth/presentation/cubit/auth_state.dart';
 import '../../auth/presentation/view/login.dart';
+import '../../chat/rating_widget.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -66,6 +67,9 @@ class ProfileScreen extends StatelessWidget {
                             style: TextStyle(fontSize: 11.sp, color: Colors.white, fontWeight: FontWeight.w600, letterSpacing: 1),
                           ),
                         ),
+                        SizedBox(height: 10.h),
+                        if (user != null)
+                          RatingWidget(userId: user.id, color: Colors.amber),
                         SizedBox(height: 20.h),
                       ],
                     ),
