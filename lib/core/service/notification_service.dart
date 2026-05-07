@@ -155,10 +155,19 @@ class NotificationService {
   // ── Handlers ─────────────────────────────────────────────────────────────────
 
   Future<void> _onForeground(RemoteMessage message) async {
+    // Don't show notification to the sender — only the receiver should see it.
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    final senderId = message.data['sender_id'] as String?;
+    if (currentUid != null && senderId == currentUid) return;
     await showNotification(message);
   }
 
-  void _onTap(RemoteMessage message) => _navigate(message.data);
+  void _onTap(RemoteMessage message) {
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    final senderId = message.data['sender_id'] as String?;
+    if (currentUid != null && senderId == currentUid) return;
+    _navigate(message.data);
+  }
 
   // ── Show notification (static so background isolate can call it) ─────────────
 

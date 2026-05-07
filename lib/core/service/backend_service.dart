@@ -49,20 +49,28 @@ class BackendService {
   // ── POST /send-message ────────────────────────────────────────────────────
 
   Future<void> sendMessageNotification({
+    required String chatId,
     required String senderId,
     required String receiverId,
     required String senderName,
     required String message,
   }) async {
     try {
-      print('[BackendService] Sending message notification → ${Constants.notificationBaseUrl}/send-message');
-      await _dio.post('/send-message', data: {
+      final body = {
+        'chat_id': chatId,
         'sender_id': senderId,
         'receiver_id': receiverId,
         'sender_name': senderName,
         'message': message,
-      });
-      print('[BackendService] ✅ Message notification sent');
+      };
+      print('[BackendService] → POST ${Constants.notificationBaseUrl}/send-message');
+      print('[BackendService] → Body: $body');
+      final response = await _dio.post(
+        '/send-message',
+        data: body,
+        options: Options(headers: {'Content-Type': 'application/json'}),
+      );
+      print('[BackendService] ✅ Status: ${response.statusCode} | Data: ${response.data}');
     } on DioException catch (e) {
       _logError('sendMessageNotification', e);
     } catch (e) {

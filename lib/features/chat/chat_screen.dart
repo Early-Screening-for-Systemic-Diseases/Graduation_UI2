@@ -70,6 +70,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     // Notify backend to push FCM notification to receiver.
     BackendService.instance.sendMessageNotification(
+      chatId: _chatId,
       senderId: widget.currentUserId,
       receiverId: widget.otherUserId,
       senderName: widget.currentUserName,
