@@ -12,6 +12,7 @@ import '../../auth/presentation/cubit/auth_state.dart';
 import '../../auth/presentation/view/login.dart';
 import '../../chat/chat_list_screen.dart';
 import '../../chat/rating_widget.dart';
+import '../../../core/service/backend_service.dart';
 
 class DoctorDashboard extends StatefulWidget {
   const DoctorDashboard({super.key});
@@ -520,6 +521,14 @@ class _ResultCardState extends State<_ResultCard> {
       _editingFeedback = false;
     });
     widget.onFeedbackSaved(_feedbackController.text.trim());
+
+    // Notify backend to push FCM notification to patient.
+    BackendService.instance.sendFeedbackNotification(
+      patientId: widget.patientId,
+      doctorId: doctorId,
+      feedback: _feedbackController.text.trim(),
+    );
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

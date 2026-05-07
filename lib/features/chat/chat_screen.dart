@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../core/service/backend_service.dart';
 import 'rating_widget.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -52,11 +53,13 @@ class _ChatScreenState extends State<ChatScreen> {
     await _messages.add({
       'senderId': widget.currentUserId,
       'senderName': widget.currentUserName,
+      'receiverId': widget.otherUserId,
       'text': text,
       'timestamp': FieldValue.serverTimestamp(),
     });
     await FirebaseFirestore.instance.collection('chats').doc(_chatId).set({
       'participants': [widget.currentUserId, widget.otherUserId],
+      'receiverId': widget.otherUserId,
       'names': {
         widget.currentUserId: widget.currentUserName,
         widget.otherUserId: widget.otherUserName,
@@ -64,6 +67,14 @@ class _ChatScreenState extends State<ChatScreen> {
       'lastMessage': text,
       'lastTimestamp': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+
+    // Notify backend to push FCM notification to receiver.
+    BackendService.instance.sendMessageNotification(
+      senderId: widget.currentUserId,
+      receiverId: widget.otherUserId,
+      senderName: widget.currentUserName,
+      message: text,
+    );
   }
 
   @override
