@@ -13,6 +13,7 @@ import '../../auth/presentation/view/login.dart';
 import '../../chat/chat_list_screen.dart';
 import '../../chat/rating_widget.dart';
 import '../../../core/service/backend_service.dart';
+import 'training_data_section.dart';
 
 class DoctorDashboard extends StatefulWidget {
   const DoctorDashboard({super.key});
@@ -703,6 +704,14 @@ class _ResultCardState extends State<_ResultCard> {
                       ),
                     ),
                   ],
+
+                  SizedBox(height: 14.h),
+
+                  // ── Training Data Label ──
+                  TrainingDataSection(
+                    result: widget.result,
+                    patientId: widget.patientId,
+                  ),
 
                   SizedBox(height: 14.h),
 
