@@ -75,7 +75,8 @@ class _PatientChatList extends StatelessWidget {
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
-          .collection('doctors')
+          .collection('users')
+          .where('role', isEqualTo: 'doctor')
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
@@ -132,7 +133,8 @@ class _DoctorChatList extends StatelessWidget {
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
-          .collection('patients')
+          .collection('users')
+          .where('role', isEqualTo: 'patient')
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {

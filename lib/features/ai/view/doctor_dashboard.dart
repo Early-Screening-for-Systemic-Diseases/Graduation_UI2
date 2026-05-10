@@ -114,7 +114,10 @@ class _PatientsTabState extends State<_PatientsTab> {
   }
 
   Future<List<UserModel>> _loadPatients() async {
-    final snap = await FirebaseFirestore.instance.collection('patients').get();
+    final snap = await FirebaseFirestore.instance
+        .collection('users')
+        .where('role', isEqualTo: 'patient')
+        .get();
     return snap.docs
         .map((d) => UserModel.fromJson(d.data()))
         .where((u) => u.combinedResults.any((r) => r.doctorFeedback.isEmpty))

@@ -29,7 +29,7 @@ class _AnalysisHistoryScreenState extends State<AnalysisHistoryScreen> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return Stream.value([]);
     return FirebaseFirestore.instance
-        .collection('patients')
+        .collection('users')
         .doc(uid)
         .snapshots()
         .map((doc) {
@@ -685,7 +685,11 @@ class _DoctorRatingRow extends StatelessWidget {
     }
     // Fallback for old results: fetch all doctors and show each one's rating
     return FutureBuilder<QuerySnapshot>(
-      future: FirebaseFirestore.instance.collection('doctors').get(),
+      future: FirebaseFirestore.instance
+          .collection('users')
+          .where('role', isEqualTo: 'doctor')
+          .limit(1)
+          .get(),
       builder: (context, snap) {
         if (!snap.hasData || snap.data!.docs.isEmpty) {
           return _RatingRow(doctorId: '');

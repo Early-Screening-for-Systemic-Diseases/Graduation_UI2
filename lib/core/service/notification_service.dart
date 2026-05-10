@@ -58,24 +58,9 @@ class NotificationService {
 
     // Token is saved after login via saveFcmToken(role:) called from main.dart.
     _messaging.onTokenRefresh.listen((token) async {
-      // On token refresh we need to re-save — look up the role from Firestore.
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null) return;
-      for (final role in ['patient', 'doctor', 'admin']) {
-        final collection = role == 'doctor'
-            ? 'doctors'
-            : role == 'admin'
-                ? 'admins'
-                : 'patients';
-        final doc = await FirebaseFirestore.instance
-            .collection(collection)
-            .doc(uid)
-            .get();
-        if (doc.exists) {
-          await _saveToken(token, role: role);
-          break;
-        }
-      }
+      await _saveToken(token);
     });
     FirebaseMessaging.onMessage.listen(_onForeground);
     FirebaseMessaging.onMessageOpenedApp.listen(_onTap);
@@ -134,20 +119,14 @@ class NotificationService {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
     final token = await _messaging.getToken();
-    if (token != null) await _saveToken(token, role: role);
+    if (token != null) await _saveToken(token);
   }
 
-  Future<void> _saveToken(String token, {String role = 'patient'}) async {
+  Future<void> _saveToken(String token) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
-    // Determine collection from role and save token there.
-    final collection = role == 'doctor'
-        ? 'doctors'
-        : role == 'admin'
-            ? 'admins'
-            : 'patients';
     await FirebaseFirestore.instance
-        .collection(collection)
+        .collection('users')
         .doc(uid)
         .set({'fcm_token': token}, SetOptions(merge: true));
   }
