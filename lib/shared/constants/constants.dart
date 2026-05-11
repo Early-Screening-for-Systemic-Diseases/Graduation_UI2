@@ -8,7 +8,7 @@ class Constants {
   //   Real Android device on same WiFi → 'http://YOUR_PC_IP:8000'
   //     (find your PC IP by running `ipconfig` on Windows, look for IPv4)
   //     example: 'http://192.168.1.5:8000'
-  static const String notificationBaseUrl = 'http://192.168.1.109:8000';
+  static const String notificationBaseUrl = 'https://welcoming-abundance-production-76a3.up.railway.app';
 
   // ── Existing AI/prediction APIs (unchanged) ─────────────────────────────────
   final String devBaseUrl              = 'https://web-production-0a787.up.railway.app';
