@@ -47,36 +47,35 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _send() async {
-    final text = _controller.text.trim();
-    if (text.isEmpty) return;
-    _controller.clear();
-    await _messages.add({
-      'senderId': widget.currentUserId,
-      'senderName': widget.currentUserName,
-      'receiverId': widget.otherUserId,
-      'text': text,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
-    await FirebaseFirestore.instance.collection('chats').doc(_chatId).set({
-      'participants': [widget.currentUserId, widget.otherUserId],
-      'receiverId': widget.otherUserId,
-      'names': {
-        widget.currentUserId: widget.currentUserName,
-        widget.otherUserId: widget.otherUserName,
-      },
-      'lastMessage': text,
-      'lastTimestamp': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+  final text = _controller.text.trim();
+  if (text.isEmpty) return;
 
-    // Notify backend to push FCM notification to receiver.
-    BackendService.instance.sendMessageNotification(
-      chatId: _chatId,
-      senderId: widget.currentUserId,
-      receiverId: widget.otherUserId,
-      senderName: widget.currentUserName,
-      message: text,
-    );
-  }
+  _controller.clear();
+
+  await FirebaseFirestore.instance
+      .collection('chats')
+      .doc(_chatId)
+      .set({
+    'participants': [widget.currentUserId, widget.otherUserId],
+    'receiverId': widget.otherUserId,
+    'names': {
+      widget.currentUserId: widget.currentUserName,
+      widget.otherUserId: widget.otherUserName,
+    },
+    'lastMessage': text,
+    'lastTimestamp': FieldValue.serverTimestamp(),
+  }, SetOptions(merge: true));
+
+// Notify backend to push FCM notification to receiver.
+
+  await BackendService.instance.sendMessageNotification(
+    chatId: _chatId,
+    senderId: widget.currentUserId,
+    receiverId: widget.otherUserId,
+    senderName: widget.currentUserName,
+    message: text,
+  );
+}
 
   @override
   Widget build(BuildContext context) {
