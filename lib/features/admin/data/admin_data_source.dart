@@ -11,20 +11,18 @@ class AdminDataSource {
 
   const AdminDataSource(this._firestore, this._auth);
 
-  CollectionReference<UserModel> _col(String name) => _firestore
-      .collection(name)
+  CollectionReference<UserModel> get _users => _firestore
+      .collection('users')
       .withConverter(
-        fromFirestore: (s, _) => UserModel.fromJson(s.data()!),
+        fromFirestore: (snapshot, _) => UserModel.fromJson(
+          {...snapshot.data()!, 'id': snapshot.id},
+        ),
         toFirestore: (u, _) => u.toJson(),
       );
 
   Future<List<UserModel>> getAllUsers() async {
-    final results = await Future.wait([
-      _col('patients').get(),
-      _col('doctors').get(),
-      _col('admins').get(),
-    ]);
-    return results.expand((s) => s.docs.map((d) => d.data())).toList();
+    final snapshot = await _users.get();
+    return snapshot.docs.map((d) => d.data()).toList();
   }
 
   Future<void> createUser(UserModel user, String password) async {
@@ -39,20 +37,14 @@ class AdminDataSource {
       phone: user.phone,
       role: user.role,
     );
-    await _col(_collectionName(user.role)).doc(newUser.id).set(newUser);
+    await _users.doc(newUser.id).set(newUser);
   }
 
   Future<void> updateUser(UserModel user, String oldRole) async {
-    if (oldRole != user.role) {
-      await _col(_collectionName(oldRole)).doc(user.id).delete();
-    }
-    await _col(_collectionName(user.role)).doc(user.id).set(user);
+    await _users.doc(user.id).set(user);
   }
 
   Future<void> deleteUser(String userId, String role) async {
-    await _col(_collectionName(role)).doc(userId).delete();
+    await _users.doc(userId).delete();
   }
-
-  String _collectionName(String role) =>
-      role == 'doctor' ? 'doctors' : role == 'admin' ? 'admins' : 'patients';
 }

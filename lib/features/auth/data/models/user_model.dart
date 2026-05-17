@@ -275,11 +275,11 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'],
-      name: json['name'],
-      email: json['email'],
-      phone: json['phone'] ?? '',
-      role: json['role'] ?? 'patient',
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      phone: json['phone'] as String? ?? '',
+      role: json['role'] as String? ?? 'patient',
       diabetesRecords: (json['diabetesRecords'] as List<dynamic>?)
           ?.map((e) => DiabetesRecord.fromJson(e)).toList() ?? [],
       anemiaRecords: (json['anemiaRecords'] as List<dynamic>?)

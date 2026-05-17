@@ -18,7 +18,9 @@ class FirebaseAuthDataSourceImpl implements FirebaseAuthDataSource {
   CollectionReference<UserModel> get _users => _firestore
       .collection('users')
       .withConverter(
-        fromFirestore: (snapshot, _) => UserModel.fromJson(snapshot.data()!),
+        fromFirestore: (snapshot, _) => UserModel.fromJson(
+          {...snapshot.data()!, 'id': snapshot.id},
+        ),
         toFirestore: (user, _) => user.toJson(),
       );
 
