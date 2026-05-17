@@ -8,7 +8,7 @@ class Constants {
   //   Real Android device on same WiFi → 'http://YOUR_PC_IP:8000'
   //     (find your PC IP by running `ipconfig` on Windows, look for IPv4)
   //     example: 'http://192.168.1.5:8000'
-  static const String notificationBaseUrl = 'http://192.168.1.109:8000';
+  static const String notificationBaseUrl = 'https://welcoming-abundance-production-76a3.up.railway.app';
 
   // ── Existing AI/prediction APIs (unchanged) ─────────────────────────────────
   final String devBaseUrl              = 'https://web-production-0a787.up.railway.app';
@@ -16,6 +16,6 @@ class Constants {
   final String anemiaBaseUrl           = 'https://web-production-e378a.up.railway.app';
   final String anemiaSurveyBaseUrl     = 'https://web-production-554a4.up.railway.app';
   final String skincancerBaseUrl       = 'https://graduation-project-production-82a6.up.railway.app';
-  final String skincancerSurveyBaseUrl = 'https://web-production-efbcf9.up.railway.app';
-  final String textPredictBaseUrl      = 'https://web-production-ef341.up.railway.app';
+  final String skincancerSurveyBaseUrl = 'https://web-production-b4aa.up.railway.app';
+  final String textPredictBaseUrl      = 'https://exquisite-eagerness-production.up.railway.app';
 }
