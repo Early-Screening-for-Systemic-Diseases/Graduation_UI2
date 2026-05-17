@@ -9,7 +9,9 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 // Top-level background handler — must be top-level for FCM isolate.
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await NotificationService.showNotification(message);
+  if (message.notification == null) {
+    await NotificationService.showNotification(message);
+  }
 }
 
 class NotificationService {
@@ -138,6 +140,7 @@ class NotificationService {
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
     final senderId = message.data['sender_id'] as String?;
     if (currentUid != null && senderId == currentUid) return;
+    if (message.notification != null) return;
     await showNotification(message);
   }
 
