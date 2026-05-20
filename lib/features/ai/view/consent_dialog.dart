@@ -51,8 +51,8 @@ class ConsentDialog extends StatefulWidget {
 }
 
 class _ConsentDialogState extends State<ConsentDialog> {
-  bool _doctorAccess = false;
-  bool _modelTraining = false;
+  bool _doctorAccess = true;
+  bool _modelTraining = true;
   bool _saving = false;
 
   static const _accent = Color(0xFF1565C0);

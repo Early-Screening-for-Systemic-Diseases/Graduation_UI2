@@ -120,7 +120,9 @@ class _PatientsTabState extends State<_PatientsTab> {
         .get();
     return snap.docs
         .map((d) => UserModel.fromJson({...d.data(), 'id': d.id}))
-        .where((u) => u.combinedResults.any((r) => r.doctorFeedback.isEmpty))
+        .where((u) =>
+            u.consentDoctorAccess == true &&
+            u.combinedResults.any((r) => r.doctorFeedback.isEmpty))
         .toList();
   }
 
