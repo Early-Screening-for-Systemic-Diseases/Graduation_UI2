@@ -73,10 +73,10 @@ class _PatientChatList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
+    return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
           .collection('users')
-          .where('role', isEqualTo: 'doctor')
+          .doc(patientId)
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
@@ -84,34 +84,79 @@ class _PatientChatList extends StatelessWidget {
               child:
                   CircularProgressIndicator(color: Color(0xFF00E5FF)));
         }
-        final doctors = snapshot.data!.docs;
-        if (doctors.isEmpty) {
-          return _EmptyState(message: 'No doctors available yet.');
+        final data = snapshot.data!.data() as Map<String, dynamic>?;
+        final rawResults = (data?['combinedResults'] as List<dynamic>?) ?? [];
+        final doctorIds = rawResults
+            .map((e) => Map<String, dynamic>.from(e))
+            .where((r) =>
+                (r['doctorFeedback'] as String? ?? '').isNotEmpty &&
+                (r['doctorId'] as String? ?? '').isNotEmpty)
+            .map((r) => (r['doctorId'] as String).trim())
+            .where((id) => id.isNotEmpty)
+            .toSet()
+            .toList();
+
+        if (doctorIds.isEmpty) {
+          return _EmptyState(
+              message:
+                  'No doctor chats available yet. You will see doctors after they give feedback.');
         }
-        return ListView.separated(
-          padding: EdgeInsets.all(16.w),
-          itemCount: doctors.length,
-          separatorBuilder: (_, __) => SizedBox(height: 10.h),
-          itemBuilder: (_, i) {
-            final data = doctors[i].data() as Map<String, dynamic>;
-            final doctorId = data['id'] as String? ?? doctors[i].id;
-            final doctorName = data['name'] as String? ?? 'Doctor';
-            return _ChatTile(
-              name: doctorName,
-              subtitle: data['email'] as String? ?? '',
-              rateeId: doctorId,
-              raterId: patientId,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ChatScreen(
-                    currentUserId: patientId,
-                    currentUserName: patientName,
-                    otherUserId: doctorId,
-                    otherUserName: doctorName,
+
+        final doctorStream = doctorIds.length <= 10
+            ? FirebaseFirestore.instance
+                .collection('users')
+                .where(FieldPath.documentId, whereIn: doctorIds)
+                .snapshots()
+            : FirebaseFirestore.instance
+                .collection('users')
+                .where('role', isEqualTo: 'doctor')
+                .snapshots();
+
+        return StreamBuilder<QuerySnapshot>(
+          stream: doctorStream,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(
+                  child:
+                      CircularProgressIndicator(color: Color(0xFF00E5FF)));
+            }
+            var doctors = snapshot.data!.docs;
+            if (doctorIds.length > 10) {
+              doctors = doctors
+                  .where((doc) => doctorIds.contains(doc.id))
+                  .toList();
+            }
+            if (doctors.isEmpty) {
+              return _EmptyState(
+                  message:
+                      'No doctor chats available yet. You will see doctors after they give feedback.');
+            }
+            return ListView.separated(
+              padding: EdgeInsets.all(16.w),
+              itemCount: doctors.length,
+              separatorBuilder: (_, __) => SizedBox(height: 10.h),
+              itemBuilder: (_, i) {
+                final data = doctors[i].data() as Map<String, dynamic>;
+                final doctorId = data['id'] as String? ?? doctors[i].id;
+                final doctorName = data['name'] as String? ?? 'Doctor';
+                return _ChatTile(
+                  name: doctorName,
+                  subtitle: data['email'] as String? ?? '',
+                  rateeId: doctorId,
+                  raterId: patientId,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatScreen(
+                        currentUserId: patientId,
+                        currentUserName: patientName,
+                        otherUserId: doctorId,
+                        otherUserName: doctorName,
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             );
           },
         );
@@ -142,10 +187,20 @@ class _DoctorChatList extends StatelessWidget {
               child:
                   CircularProgressIndicator(color: Color(0xFF00E5FF)));
         }
-        final patients = snapshot.data!.docs;
+        final patients = snapshot.data!.docs.where((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          final rawResults = (data['combinedResults'] as List<dynamic>?) ?? [];
+          return rawResults
+              .map((e) => Map<String, dynamic>.from(e))
+              .any((r) =>
+                  (r['doctorFeedback'] as String? ?? '').isNotEmpty &&
+                  (r['doctorId'] as String? ?? '') == doctorId);
+        }).toList();
+
         if (patients.isEmpty) {
           return _EmptyState(
-              message: 'No patients available yet.');
+              message:
+                  'No patients available yet. You will see patients after you submit feedback.');
         }
         return ListView.separated(
           padding: EdgeInsets.all(16.w),
