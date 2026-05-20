@@ -8,6 +8,7 @@ import '../widgets/category_card.dart';
 import 'diabetes_analysis_screen.dart';
 import 'anemia_analysis_screen.dart';
 import 'skin_cancer_analysis_screen.dart';
+import 'mode_selection_modal.dart';
 import '../../clinical_guidance/view/guidance_detail_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -150,10 +151,21 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const DiabetesAnalysisScreen()),
-                  ),
+                  onTap: () async {
+                    final mode = await showModeSelectionModal(
+                      context,
+                      disease: 'Diabetes',
+                      color: Colors.blueAccent,
+                    );
+                    if (mode != null && context.mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => DiabetesAnalysisScreen(predictionMode: mode),
+                        ),
+                      );
+                    }
+                  },
                   child: const CategoryCard(
                     icon: '🔬',
                     name: 'Diabetes',
@@ -162,10 +174,21 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SkinCancerAnalysisScreen()),
-                  ),
+                  onTap: () async {
+                    final mode = await showModeSelectionModal(
+                      context,
+                      disease: 'Skin Cancer',
+                      color: Color(0xFF6A1B9A),
+                    );
+                    if (mode != null && context.mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => SkinCancerAnalysisScreen(predictionMode: mode),
+                        ),
+                      );
+                    }
+                  },
                   child: const CategoryCard(
                     icon: '🔆',
                     name: 'Skin Cancer',

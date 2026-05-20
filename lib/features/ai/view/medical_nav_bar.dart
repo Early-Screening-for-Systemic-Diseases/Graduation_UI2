@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../chat/chat_list_screen.dart';
 import 'analysis_screen.dart';
+import 'consent_dialog.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 
@@ -16,6 +18,22 @@ class _MedicalNavBarState extends State<MedicalNavBar> {
   int _selectedIndex = 0;
 
   final List<Widget> _screens = const [HomeScreen(), AnalysisScreen(), ChatListScreen(), ProfileScreen()];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkConsent());
+  }
+
+  Future<void> _checkConsent() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || !mounted) return;
+    final consent = await ConsentService.getConsent(uid);
+    // Show dialog only if neither field has been set yet (null = first time)
+    if (consent.modelTraining == null && mounted) {
+      await ConsentDialog.show(context);
+    }
+  }
 
   static const _items = [
     (icon: Icons.home_rounded, label: 'Home'),

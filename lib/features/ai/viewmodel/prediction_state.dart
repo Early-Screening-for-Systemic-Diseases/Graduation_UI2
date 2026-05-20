@@ -44,14 +44,16 @@ class CombinedAnalysisSuccess extends PredictionState {
   final double imgScore;
   final double surveyScore;
   final double nlpScore;
+  final String predictionMode;
 
   CombinedAnalysisSuccess({
     required this.finalScore,
     required this.imgScore,
     required this.surveyScore,
     required this.nlpScore,
+    this.predictionMode = 'precise',
   });
 
   @override
-  List<Object?> get props => [finalScore, imgScore, surveyScore, nlpScore];
+  List<Object?> get props => [finalScore, imgScore, surveyScore, nlpScore, predictionMode];
 }

@@ -7,6 +7,7 @@ import '../../../features/auth/presentation/cubit/auth_hydrated_cubit.dart';
 import '../../../features/auth/presentation/cubit/auth_state.dart';
 import '../../auth/presentation/view/login.dart';
 import '../../chat/rating_widget.dart';
+import 'consent_dialog.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -104,6 +105,12 @@ class ProfileScreen extends StatelessWidget {
                         value: (user?.role.name ?? 'patient')[0].toUpperCase() + (user?.role.name ?? 'patient').substring(1),
                         color: const Color(0xFF00897B),
                       ),
+
+                      // ── Privacy & Consent (patients only) ───────
+                      if (user != null && user.role == UserRole.patient) ...[
+                        SizedBox(height: 12.h),
+                        ConsentSettingsCard(uid: user.id),
+                      ],
 
                       SizedBox(height: 32.h),
 

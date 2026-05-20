@@ -12,7 +12,9 @@ import 'analysis_result_screen.dart';
 import 'analysis_history_screen.dart';
 
 class SkinCancerAnalysisScreen extends StatefulWidget {
-  const SkinCancerAnalysisScreen({super.key});
+  final String predictionMode;
+
+  const SkinCancerAnalysisScreen({super.key, this.predictionMode = 'precise'});
 
   @override
   State<SkinCancerAnalysisScreen> createState() => _SkinCancerAnalysisScreenState();
@@ -102,15 +104,14 @@ class _SkinCancerAnalysisScreenState extends State<SkinCancerAnalysisScreen> {
 
   void _analyze() {
     if (_image == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please upload an image')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Please upload an image')));
       return;
     }
-    if (_textController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please describe your symptoms')));
+    final isFast = widget.predictionMode == 'fast';
+    if (!isFast && _textController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Please describe your symptoms')));
       return;
     }
     _cubit.runCombinedAnalysis(
@@ -118,6 +119,7 @@ class _SkinCancerAnalysisScreenState extends State<SkinCancerAnalysisScreen> {
       imageFile: _image!,
       surveyData: _surveyData,
       symptomText: _textController.text.trim(),
+      predictionMode: widget.predictionMode,
     );
   }
 
@@ -336,7 +338,8 @@ class _SkinCancerAnalysisScreenState extends State<SkinCancerAnalysisScreen> {
 
                     SizedBox(height: 28.h),
 
-                    // ── Step 2: Survey ─────────────────────────────
+                    // ── Step 2: Survey (Precise only) ──────────────
+                    if (widget.predictionMode != 'fast') ...[
                     const StepHeader(step: '2', title: 'Risk Factor Survey', color: _color),
                     SizedBox(height: 12.h),
 
@@ -588,8 +591,9 @@ class _SkinCancerAnalysisScreenState extends State<SkinCancerAnalysisScreen> {
                         ),
                       ),
                     ),
-
                     SizedBox(height: 32.h),
+                    ] else
+                      SizedBox(height: 32.h),
 
                     // ── Analyze Button ─────────────────────────────
                     BlocBuilder<PredictionCubit, PredictionState>(

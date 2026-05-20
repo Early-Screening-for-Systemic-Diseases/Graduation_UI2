@@ -7,11 +7,13 @@ import '../../auth/data/models/user_model.dart';
 class TrainingDataSection extends StatefulWidget {
   final CombinedAnalysisResult result;
   final String patientId;
+  final bool consentModelTraining;
 
   const TrainingDataSection({
     super.key,
     required this.result,
     required this.patientId,
+    this.consentModelTraining = false,
   });
 
   @override
@@ -162,9 +164,46 @@ class _TrainingDataSectionState extends State<TrainingDataSection> {
             ],
           ),
           SizedBox(height: 10.h),
-          if (_saved) _buildSuccessState() else _buildLabelingForm(),
+          if (!widget.consentModelTraining)
+            _buildNoConsentState()
+          else if (_saved)
+            _buildSuccessState()
+          else
+            _buildLabelingForm(),
         ],
       ),
+    );
+  }
+
+  Widget _buildNoConsentState() {
+    return Row(
+      children: [
+        Container(
+          padding: EdgeInsets.all(8.w),
+          decoration: BoxDecoration(
+            color: Colors.orange.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+          ),
+          child: Icon(Icons.lock_outline_rounded, color: Colors.orange, size: 16.sp),
+        ),
+        SizedBox(width: 10.w),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Consent not given',
+                style: TextStyle(color: Colors.orange, fontSize: 13.sp, fontWeight: FontWeight.w600),
+              ),
+              Text(
+                'This patient has not consented to AI model training.',
+                style: TextStyle(color: Colors.white38, fontSize: 11.sp),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

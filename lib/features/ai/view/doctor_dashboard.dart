@@ -454,6 +454,7 @@ class _PatientResultsScreenState extends State<_PatientResultsScreen> {
                 color: _colorFor(_results[i].disease),
                 icon: _iconFor(_results[i].disease),
                 patientId: widget.patient.id,
+                consentModelTraining: widget.patient.consentModelTraining == true,
                 dataSource: widget.dataSource,
                 onFeedbackSaved: (feedback) {
                   setState(() => _results.removeAt(i));
@@ -473,6 +474,7 @@ class _ResultCard extends StatefulWidget {
   final Color color;
   final String icon;
   final String patientId;
+  final bool consentModelTraining;
   final FirebaseAuthDataSource dataSource;
   final void Function(String) onFeedbackSaved;
 
@@ -481,6 +483,7 @@ class _ResultCard extends StatefulWidget {
     required this.color,
     required this.icon,
     required this.patientId,
+    required this.consentModelTraining,
     required this.dataSource,
     required this.onFeedbackSaved,
   });
@@ -714,6 +717,7 @@ class _ResultCardState extends State<_ResultCard> {
                   TrainingDataSection(
                     result: widget.result,
                     patientId: widget.patientId,
+                    consentModelTraining: widget.consentModelTraining,
                   ),
 
                   SizedBox(height: 14.h),

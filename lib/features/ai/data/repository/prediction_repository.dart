@@ -162,6 +162,7 @@ class PredictionRepository {
     required double imgScore,
     required double surveyScore,
     required double nlpScore,
+    String predictionMode = 'precise',
   }) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return;
@@ -178,7 +179,9 @@ class PredictionRepository {
         surveyScore: surveyScore,
         nlpScore: nlpScore,
         timestamp: DateTime.now(),
+        predictionMode: predictionMode,
       ),
     );
   }
 }
+

@@ -17,7 +17,9 @@ import '../widgets/analysis_shared_widgets.dart';
 import 'analysis_history_screen.dart';
 
 class DiabetesAnalysisScreen extends StatefulWidget {
-  const DiabetesAnalysisScreen({super.key});
+  final String predictionMode;
+
+  const DiabetesAnalysisScreen({super.key, this.predictionMode = 'precise'});
 
   @override
   State<DiabetesAnalysisScreen> createState() => _DiabetesAnalysisScreenState();
@@ -51,15 +53,14 @@ class _DiabetesAnalysisScreenState extends State<DiabetesAnalysisScreen> {
 
   void _analyze() {
     if (_image == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please upload an image')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Please upload an image')));
       return;
     }
-    if (_textController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please describe your symptoms')));
+    final isFast = widget.predictionMode == 'fast';
+    if (!isFast && _textController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Please describe your symptoms')));
       return;
     }
     _cubit.runCombinedAnalysis(
@@ -67,6 +68,7 @@ class _DiabetesAnalysisScreenState extends State<DiabetesAnalysisScreen> {
       imageFile: _image!,
       surveyData: _healthData.toJson(),
       symptomText: _textController.text.trim(),
+      predictionMode: widget.predictionMode,
     );
   }
 
@@ -181,96 +183,97 @@ class _DiabetesAnalysisScreenState extends State<DiabetesAnalysisScreen> {
 
                     SizedBox(height: 28.h),
 
-                    // ── Step 2: Survey ─────────────────────────────
-                    const StepHeader(step: '2', title: 'Health Survey', color: _color),
-                    SizedBox(height: 12.h),
-                    BMIInputWidget(
-                      initialValue: _healthData.bmi,
-                      onChanged: (v) => _healthData.bmi = v,
-                      color: _color,
-                    ),
-                    SizedBox(height: 10.h),
-                    BinaryChoiceWidget(
-                      label: 'Have you been told you have high blood pressure?',
-                      initialValue: _healthData.highBP,
-                      onChanged: (v) => _healthData.highBP = v,
-                      color: _color,
-                    ),
-                    SizedBox(height: 10.h),
-                    BinaryChoiceWidget(
-                      label: 'Have you been told your cholesterol is high?',
-                      initialValue: _healthData.highChol,
-                      onChanged: (v) => _healthData.highChol = v,
-                      color: _color,
-                    ),
-                    SizedBox(height: 10.h),
-                    BinaryChoiceWidget(
-                      label: 'Do you do physical activity or exercise?',
-                      initialValue: _healthData.physActivity,
-                      onChanged: (v) => _healthData.physActivity = v,
-                      color: _color,
-                    ),
-                    SizedBox(height: 10.h),
-                    SliderInputWidget(
-                      label: 'General health (1=Excellent, 5=Poor)',
-                      min: 1,
-                      max: 5,
-                      initialValue: _healthData.genHlth.toDouble(),
-                      onChanged: (v) => _healthData.genHlth = v.toInt(),
-                      color: _color,
-                    ),
-                    SizedBox(height: 10.h),
-                    SliderInputWidget(
-                      label: 'Days physical health was not good (0–30)',
-                      min: 0,
-                      max: 30,
-                      initialValue: _healthData.physHlth.toDouble(),
-                      onChanged: (v) => _healthData.physHlth = v.toInt(),
-                      color: _color,
-                    ),
-                    SizedBox(height: 10.h),
-                    BinaryChoiceWidget(
-                      label: 'Difficulty walking or climbing stairs?',
-                      initialValue: _healthData.diffWalk,
-                      onChanged: (v) => _healthData.diffWalk = v,
-                      color: _color,
-                    ),
-                    SizedBox(height: 10.h),
-                    AgeSelectorWidget(
-                      initialValue: _healthData.age,
-                      onChanged: (v) => _healthData.age = v,
-                      color: _color,
-                    ),
+                    // ── Step 2: Survey (Precise only) ──────────────
+                    if (widget.predictionMode != 'fast') ...[
+                      const StepHeader(step: '2', title: 'Health Survey', color: _color),
+                      SizedBox(height: 12.h),
+                      BMIInputWidget(
+                        initialValue: _healthData.bmi,
+                        onChanged: (v) => _healthData.bmi = v,
+                        color: _color,
+                      ),
+                      SizedBox(height: 10.h),
+                      BinaryChoiceWidget(
+                        label: 'Have you been told you have high blood pressure?',
+                        initialValue: _healthData.highBP,
+                        onChanged: (v) => _healthData.highBP = v,
+                        color: _color,
+                      ),
+                      SizedBox(height: 10.h),
+                      BinaryChoiceWidget(
+                        label: 'Have you been told your cholesterol is high?',
+                        initialValue: _healthData.highChol,
+                        onChanged: (v) => _healthData.highChol = v,
+                        color: _color,
+                      ),
+                      SizedBox(height: 10.h),
+                      BinaryChoiceWidget(
+                        label: 'Do you do physical activity or exercise?',
+                        initialValue: _healthData.physActivity,
+                        onChanged: (v) => _healthData.physActivity = v,
+                        color: _color,
+                      ),
+                      SizedBox(height: 10.h),
+                      SliderInputWidget(
+                        label: 'General health (1=Excellent, 5=Poor)',
+                        min: 1,
+                        max: 5,
+                        initialValue: _healthData.genHlth.toDouble(),
+                        onChanged: (v) => _healthData.genHlth = v.toInt(),
+                        color: _color,
+                      ),
+                      SizedBox(height: 10.h),
+                      SliderInputWidget(
+                        label: 'Days physical health was not good (0–30)',
+                        min: 0,
+                        max: 30,
+                        initialValue: _healthData.physHlth.toDouble(),
+                        onChanged: (v) => _healthData.physHlth = v.toInt(),
+                        color: _color,
+                      ),
+                      SizedBox(height: 10.h),
+                      BinaryChoiceWidget(
+                        label: 'Difficulty walking or climbing stairs?',
+                        initialValue: _healthData.diffWalk,
+                        onChanged: (v) => _healthData.diffWalk = v,
+                        color: _color,
+                      ),
+                      SizedBox(height: 10.h),
+                      AgeSelectorWidget(
+                        initialValue: _healthData.age,
+                        onChanged: (v) => _healthData.age = v,
+                        color: _color,
+                      ),
+                      SizedBox(height: 28.h),
 
-                    SizedBox(height: 28.h),
-
-                    // ── Step 3: Symptoms Text ──────────────────────
-                    const StepHeader(step: '3', title: 'Describe Your Symptoms', color: _color),
-                    SizedBox(height: 12.h),
-                    TextField(
-                      controller: _textController,
-                      maxLines: 4,
-                      decoration: InputDecoration(
-                        hintText:
-                            'e.g., I feel very thirsty, frequent urination, blurred vision...',
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14.r),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14.r),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14.r),
-                          borderSide: const BorderSide(color: _color),
+                      // ── Step 3: Symptoms Text ──────────────────────
+                      const StepHeader(step: '3', title: 'Describe Your Symptoms', color: _color),
+                      SizedBox(height: 12.h),
+                      TextField(
+                        controller: _textController,
+                        maxLines: 4,
+                        decoration: InputDecoration(
+                          hintText:
+                              'e.g., I feel very thirsty, frequent urination, blurred vision...',
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14.r),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14.r),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14.r),
+                            borderSide: const BorderSide(color: _color),
+                          ),
                         ),
                       ),
-                    ),
-
-                    SizedBox(height: 32.h),
+                      SizedBox(height: 32.h),
+                    ] else
+                      SizedBox(height: 32.h),
 
                     // ── Analyze Button ─────────────────────────────
                     BlocBuilder<PredictionCubit, PredictionState>(

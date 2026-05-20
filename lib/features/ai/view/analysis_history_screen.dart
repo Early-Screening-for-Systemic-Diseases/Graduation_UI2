@@ -156,7 +156,7 @@ class _HistoryCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Top row: date + risk badge ──
+            // ── Top row: date + badges ──
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -170,16 +170,45 @@ class _HistoryCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: riskColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Text(
-                    riskLabel,
-                    style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, color: riskColor),
-                  ),
+                Row(
+                  children: [
+                    if (result.predictionMode == 'fast') ...[
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(20.r),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.bolt_rounded, size: 11.sp, color: Colors.grey.shade600),
+                            SizedBox(width: 2.w),
+                            Text(
+                              'Fast',
+                              style: TextStyle(
+                                fontSize: 11.sp,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 6.w),
+                    ],
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: riskColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20.r),
+                      ),
+                      child: Text(
+                        riskLabel,
+                        style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, color: riskColor),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

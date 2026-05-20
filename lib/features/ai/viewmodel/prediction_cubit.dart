@@ -98,11 +98,13 @@ class PredictionCubit extends Cubit<PredictionState> {
 
   /// Calls all 3 APIs in parallel and computes weighted final score.
   /// Image 60% | Survey 30% | NLP 10%
+  /// When predictionMode == 'fast', calls only the image API (score = imgScore).
   Future<void> runCombinedAnalysis({
     required String disease,
     required File imageFile,
     required Map<String, dynamic> surveyData,
     required String symptomText,
+    String predictionMode = 'precise',
   }) async {
     emit(PredictionLoading());
     try {
@@ -111,22 +113,13 @@ class PredictionCubit extends Cubit<PredictionState> {
           : disease == 'Skin Cancer'
               ? _repository.predictSkinCancerImage(imageFile, imageFile.path)
               : _repository.predictImage(imageFile, imageFile.path);
-      final surveyFuture = disease == 'Anemia'
-          ? _repository.predictAnemiaSurvey(surveyData)
-          : disease == 'Skin Cancer'
-              ? _repository.predictSkinCancerSurvey(surveyData)
-              : _repository.predictHealthData(HealthDataModel.fromJson(surveyData));
-      final nlpFuture = _repository.predictFromText(symptomText);
 
       final imgResp = await imgFuture;
-      final surveyResp = await surveyFuture;
-      final nlpResp = await nlpFuture;
 
       double imgScore = 0;
       Map<String, dynamic> imageRecord = {};
       imgResp.fold((f) => throw Exception(f.message), (r) {
         imgScore = r.probability * 100;
-        // Mirror exact fields saved separately per disease
         if (disease == 'Anemia') {
           imageRecord = {
             'imageUrl': imageFile.path,
@@ -142,7 +135,6 @@ class PredictionCubit extends Cubit<PredictionState> {
             'timestamp': DateTime.now().toIso8601String(),
           };
         } else {
-          // Diabetes
           imageRecord = {
             'imageUrl': imageFile.path,
             'prediction': r.prediction,
@@ -154,51 +146,65 @@ class PredictionCubit extends Cubit<PredictionState> {
 
       double surveyScore = 0;
       Map<String, dynamic> surveyRecord = {};
-      surveyResp.fold((f) => throw Exception(f.message), (r) {
-        surveyScore = r.probability * 100;
-        // Mirror exact fields saved separately per disease
-        if (disease == 'Anemia') {
-          surveyRecord = {
-            'prediction': r.prediction,
-            'anemiaProbability': r.probability,
-            'surveyData': surveyData,
-            'timestamp': DateTime.now().toIso8601String(),
-          };
-        } else if (disease == 'Skin Cancer') {
-          surveyRecord = {
-            'riskLevel': r.prediction,
-            'riskScore': r.probability,
-            'surveyData': surveyData,
-            'timestamp': DateTime.now().toIso8601String(),
-          };
-        } else {
-          // Diabetes
-          surveyRecord = {
-            'diabetes': r.prediction,
-            'probability': r.probability,
-            'surveyData': surveyData,
-            'timestamp': DateTime.now().toIso8601String(),
-          };
-        }
-      });
-
       double nlpScore = 0;
       Map<String, dynamic> nlpRecord = {};
-      nlpResp.fold((f) => throw Exception(f.message), (r) {
-        final normalized = disease.toLowerCase().replaceAll(' ', '');
-        final key = r.resultsMap.keys.firstWhere(
-          (k) => k.toLowerCase().replaceAll(' ', '') == normalized,
-          orElse: () => '',
-        );
-        nlpScore = key.isNotEmpty ? (r.resultsMap[key]?.percentage ?? 0.0) : 0.0;
-        nlpRecord = {
-          'text': r.text,
-          'matched_symptoms': key.isNotEmpty ? (r.resultsMap[key]?.matchedSymptoms ?? []) : [],
-          'percentage': nlpScore,
-        };
-      });
+      double finalScore;
 
-      final finalScore = (imgScore * 0.60) + (surveyScore * 0.30) + (nlpScore * 0.10);
+      if (predictionMode == 'fast') {
+        finalScore = imgScore;
+      } else {
+        final surveyFuture = disease == 'Anemia'
+            ? _repository.predictAnemiaSurvey(surveyData)
+            : disease == 'Skin Cancer'
+                ? _repository.predictSkinCancerSurvey(surveyData)
+                : _repository.predictHealthData(HealthDataModel.fromJson(surveyData));
+        final nlpFuture = _repository.predictFromText(symptomText);
+
+        final surveyResp = await surveyFuture;
+        final nlpResp = await nlpFuture;
+
+        surveyResp.fold((f) => throw Exception(f.message), (r) {
+          surveyScore = r.probability * 100;
+          if (disease == 'Anemia') {
+            surveyRecord = {
+              'prediction': r.prediction,
+              'anemiaProbability': r.probability,
+              'surveyData': surveyData,
+              'timestamp': DateTime.now().toIso8601String(),
+            };
+          } else if (disease == 'Skin Cancer') {
+            surveyRecord = {
+              'riskLevel': r.prediction,
+              'riskScore': r.probability,
+              'surveyData': surveyData,
+              'timestamp': DateTime.now().toIso8601String(),
+            };
+          } else {
+            surveyRecord = {
+              'diabetes': r.prediction,
+              'probability': r.probability,
+              'surveyData': surveyData,
+              'timestamp': DateTime.now().toIso8601String(),
+            };
+          }
+        });
+
+        nlpResp.fold((f) => throw Exception(f.message), (r) {
+          final normalized = disease.toLowerCase().replaceAll(' ', '');
+          final key = r.resultsMap.keys.firstWhere(
+            (k) => k.toLowerCase().replaceAll(' ', '') == normalized,
+            orElse: () => '',
+          );
+          nlpScore = key.isNotEmpty ? (r.resultsMap[key]?.percentage ?? 0.0) : 0.0;
+          nlpRecord = {
+            'text': r.text,
+            'matched_symptoms': key.isNotEmpty ? (r.resultsMap[key]?.matchedSymptoms ?? []) : [],
+            'percentage': nlpScore,
+          };
+        });
+
+        finalScore = (imgScore * 0.60) + (surveyScore * 0.30) + (nlpScore * 0.10);
+      }
 
       await _repository.saveCombinedResult(
         disease: disease,
@@ -210,6 +216,7 @@ class PredictionCubit extends Cubit<PredictionState> {
         imgScore: imgScore.clamp(0, 100),
         surveyScore: surveyScore.clamp(0, 100),
         nlpScore: nlpScore.clamp(0, 100),
+        predictionMode: predictionMode,
       );
 
       emit(
@@ -218,6 +225,7 @@ class PredictionCubit extends Cubit<PredictionState> {
           imgScore: imgScore.clamp(0, 100),
           surveyScore: surveyScore.clamp(0, 100),
           nlpScore: nlpScore.clamp(0, 100),
+          predictionMode: predictionMode,
         ),
       );
     } catch (e) {
@@ -225,3 +233,4 @@ class PredictionCubit extends Cubit<PredictionState> {
     }
   }
 }
+

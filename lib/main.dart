@@ -65,6 +65,9 @@ Future<void> main() async {
   Bloc.observer = AppBlocObserver();
   setupLocator();
 
+
+  
+
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,

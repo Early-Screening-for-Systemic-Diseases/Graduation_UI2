@@ -73,6 +73,35 @@ class AnalysisResultScreen extends StatelessWidget {
             padding: EdgeInsets.all(24.w),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
+                // ── Fast Mode Banner ───────────────────────────────
+                if (result.predictionMode == 'fast') ...[
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.09),
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: Colors.orange.withOpacity(0.35)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.bolt_rounded, color: Colors.orange.shade700, size: 18.sp),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Text(
+                            'Fast Mode Result — For a more accurate analysis, try Precise Mode.',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: Colors.orange.shade800,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                ],
+
                 // ── Main Score Card ────────────────────────────────
                 Container(
                   padding: EdgeInsets.all(28.w),

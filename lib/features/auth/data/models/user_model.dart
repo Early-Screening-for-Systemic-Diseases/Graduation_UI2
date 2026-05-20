@@ -195,6 +195,7 @@ class CombinedAnalysisResult {
   final String doctorFeedback;
   final String doctorId;
   final DateTime timestamp;
+  final String predictionMode;
 
   const CombinedAnalysisResult({
     required this.disease,
@@ -209,6 +210,7 @@ class CombinedAnalysisResult {
     this.doctorFeedback = '',
     this.doctorId = '',
     required this.timestamp,
+    this.predictionMode = 'precise',
   });
 
   factory CombinedAnalysisResult.fromJson(Map<String, dynamic> json) {
@@ -225,6 +227,7 @@ class CombinedAnalysisResult {
       doctorFeedback: json['doctorFeedback'] ?? '',
       doctorId: json['doctorId'] ?? '',
       timestamp: DateTime.parse(json['timestamp']),
+      predictionMode: json['predictionMode'] ?? 'precise',
     );
   }
 
@@ -241,6 +244,7 @@ class CombinedAnalysisResult {
         'doctorFeedback': doctorFeedback,
         'doctorId': doctorId,
         'timestamp': timestamp.toIso8601String(),
+        'predictionMode': predictionMode,
       };
 }
 
@@ -250,6 +254,8 @@ class UserModel {
   final String email;
   final String phone;
   final String role;
+  final bool? consentDoctorAccess;
+  final bool? consentModelTraining;
   final List<DiabetesRecord> diabetesRecords;
   final List<AnemiaRecord> anemiaRecords;
   final List<DiabetesSurvey> diabetesSurveys;
@@ -264,6 +270,8 @@ class UserModel {
     required this.email,
     required this.phone,
     this.role = 'patient',
+    this.consentDoctorAccess,
+    this.consentModelTraining,
     this.diabetesRecords = const [],
     this.anemiaRecords = const [],
     this.diabetesSurveys = const [],
@@ -274,12 +282,16 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    final cda = json['consentDoctorAccess'];
+    final cmt = json['consentModelTraining'];
     return UserModel(
       id: json['id'] as String? ?? '',
       name: json['name'] as String? ?? '',
       email: json['email'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
       role: json['role'] as String? ?? 'patient',
+      consentDoctorAccess: cda is bool ? cda : null,
+      consentModelTraining: cmt is bool ? cmt : null,
       diabetesRecords: (json['diabetesRecords'] as List<dynamic>?)
           ?.map((e) => DiabetesRecord.fromJson(e)).toList() ?? [],
       anemiaRecords: (json['anemiaRecords'] as List<dynamic>?)
@@ -304,6 +316,8 @@ class UserModel {
       'email': email,
       'phone': phone,
       'role': role,
+      if (consentDoctorAccess != null) 'consentDoctorAccess': consentDoctorAccess,
+      if (consentModelTraining != null) 'consentModelTraining': consentModelTraining,
       'diabetesRecords': diabetesRecords.map((e) => e.toJson()).toList(),
       'anemiaRecords': anemiaRecords.map((e) => e.toJson()).toList(),
       'diabetesSurveys': diabetesSurveys.map((e) => e.toJson()).toList(),
