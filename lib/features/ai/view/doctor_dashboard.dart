@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import '../../../core/service/service_locator.dart';
+import '../../../core/widgets/local_or_network_image.dart';
 import '../../auth/data/data_source/firebase_data_source/firebase_auth_data_source.dart';
 import '../../auth/data/models/user_model.dart';
 import '../../auth/presentation/cubit/auth_hydrated_cubit.dart';
