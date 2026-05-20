@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -563,8 +562,7 @@ class _ResultCardState extends State<_ResultCard> {
       child: Column(
         children: [
           // ── Image (always visible) ──
-          if ((widget.result.imageRecord['imageUrl'] as String? ?? '').isNotEmpty &&
-              File(widget.result.imageRecord['imageUrl'] as String).existsSync()) ...[
+          if ((widget.result.imageRecord['imageUrl'] as String? ?? '').isNotEmpty) ...[
             GestureDetector(
               onTap: () => Navigator.push(
                 context,
@@ -583,11 +581,12 @@ class _ResultCardState extends State<_ResultCard> {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    Image.file(
-                      File(widget.result.imageRecord['imageUrl'] as String),
+                    LocalOrNetworkImage(
+                      imageUrl: widget.result.imageRecord['imageUrl'] as String,
                       height: 160.h,
                       width: double.infinity,
                       fit: BoxFit.cover,
+                      placeholder: Container(color: Colors.black12),
                     ),
                     Container(
                       padding: EdgeInsets.all(8.w),
@@ -842,7 +841,11 @@ class _FullscreenImageScreen extends StatelessWidget {
         child: InteractiveViewer(
           minScale: 0.5,
           maxScale: 4.0,
-          child: Image.file(File(imagePath), fit: BoxFit.contain),
+          child: LocalOrNetworkImage(
+            imageUrl: imagePath,
+            fit: BoxFit.contain,
+            placeholder: Container(color: Colors.black),
+          ),
         ),
       ),
     );

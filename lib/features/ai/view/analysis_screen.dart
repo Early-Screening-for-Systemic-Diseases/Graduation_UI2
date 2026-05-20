@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -6,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../auth/data/data_source/firebase_data_source/firebase_auth_data_source.dart';
 import '../../auth/data/models/user_model.dart';
 import '../../../core/service/service_locator.dart';
+import '../../../core/widgets/local_or_network_image.dart';
 import 'analysis_history_screen.dart';
 
 class AnalysisScreen extends StatefulWidget {
@@ -234,7 +234,7 @@ class _CombinedCard extends StatelessWidget {
     final isHigh = score >= 50;
     final riskColor = isHigh ? Colors.red : Colors.green;
     final imageUrl = result.imageRecord['imageUrl'] as String? ?? '';
-    final hasImage = imageUrl.isNotEmpty && File(imageUrl).existsSync();
+    final hasImage = imageUrl.isNotEmpty;
 
     return GestureDetector(
       onTap: () => Navigator.push(
@@ -255,7 +255,13 @@ class _CombinedCard extends StatelessWidget {
             if (hasImage)
               ClipRRect(
                 borderRadius: BorderRadius.vertical(top: Radius.circular(18.r)),
-                child: Image.file(File(imageUrl), height: 130.h, width: double.infinity, fit: BoxFit.cover),
+                child: LocalOrNetworkImage(
+                  imageUrl: imageUrl,
+                  height: 130.h,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  placeholder: Container(color: Colors.grey.shade200),
+                ),
               )
             else
               Container(
@@ -442,7 +448,7 @@ class _HistoryDetailScreen extends StatelessWidget {
     final isHigh = score >= 50;
     final riskColor = isHigh ? Colors.red : Colors.green;
     final imageUrl = result.imageRecord['imageUrl'] as String? ?? '';
-    final hasImage = imageUrl.isNotEmpty && File(imageUrl).existsSync();
+    final hasImage = imageUrl.isNotEmpty;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -468,7 +474,11 @@ class _HistoryDetailScreen extends StatelessWidget {
                   ? Stack(
                       fit: StackFit.expand,
                       children: [
-                        Image.file(File(imageUrl), fit: BoxFit.cover),
+                        LocalOrNetworkImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.cover,
+                          placeholder: Container(color: Colors.black12),
+                        ),
                         Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(

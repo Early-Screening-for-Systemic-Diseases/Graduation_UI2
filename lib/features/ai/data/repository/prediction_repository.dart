@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:injectable/injectable.dart';
 import '../../../../core/error/exception.dart';
 import '../../../../core/error/faliure.dart';
@@ -19,13 +20,38 @@ class PredictionRepository {
 
   PredictionRepository(this._dataSource, this._firebaseDataSource, this._auth);
 
+  bool _isRemoteUrl(String url) {
+    final normalized = url.toLowerCase();
+    return normalized.startsWith('http://') || normalized.startsWith('https://');
+  }
+
+  Future<String> _uploadImageToStorage(File imageFile, String userId) async {
+    final fileName = imageFile.path.split(RegExp(r'[\\/]+')).last;
+    final storageRef = FirebaseStorage.instance
+        .ref('users/$userId/analysis_images/${DateTime.now().millisecondsSinceEpoch}_$fileName');
+    final snapshot = await storageRef.putFile(imageFile);
+    return await snapshot.ref.getDownloadURL();
+  }
+
+  Future<String> uploadImageToStorage(File imageFile, String userId) async {
+    return _uploadImageToStorage(imageFile, userId);
+  }
+
   Future<Either<Failure, PredictionResponse>> predictImage(File imageFile, String imageUrl) async {
     try {
       final response = await _dataSource.predictImage(imageFile);
       final userId = _auth.currentUser?.uid;
       if (userId != null) {
+        var recordedImageUrl = imageUrl;
+        if (!_isRemoteUrl(imageUrl)) {
+          try {
+            recordedImageUrl = await _uploadImageToStorage(imageFile, userId);
+          } catch (e) {
+            print('[PredictionRepository] Firebase Storage upload failed: $e');
+          }
+        }
         final record = DiabetesRecord(
-          imageUrl: imageUrl,
+          imageUrl: recordedImageUrl,
           prediction: response.prediction,
           probabilityNonDiabetes: response.probability,
           timestamp: DateTime.now(),
@@ -65,8 +91,16 @@ class PredictionRepository {
       final response = await _dataSource.predictAnemiaImage(imageFile);
       final userId = _auth.currentUser?.uid;
       if (userId != null) {
+        var recordedImageUrl = imageUrl;
+        if (!_isRemoteUrl(imageUrl)) {
+          try {
+            recordedImageUrl = await _uploadImageToStorage(imageFile, userId);
+          } catch (e) {
+            print('[PredictionRepository] Firebase Storage upload failed: $e');
+          }
+        }
         final record = AnemiaRecord(
-          imageUrl: imageUrl,
+          imageUrl: recordedImageUrl,
           anemiaStatus: response.prediction,
           hbValue: response.probability,
           timestamp: DateTime.now(),
@@ -108,8 +142,16 @@ class PredictionRepository {
       final response = await _dataSource.predictSkinCancerImage(imageFile);
       final userId = _auth.currentUser?.uid;
       if (userId != null) {
+        var recordedImageUrl = imageUrl;
+        if (!_isRemoteUrl(imageUrl)) {
+          try {
+            recordedImageUrl = await _uploadImageToStorage(imageFile, userId);
+          } catch (e) {
+            print('[PredictionRepository] Firebase Storage upload failed: $e');
+          }
+        }
         final record = SkinCancerRecord(
-          imageUrl: imageUrl,
+          imageUrl: recordedImageUrl,
           predictedClass: response.prediction,
           confidence: response.probability,
           timestamp: DateTime.now(),

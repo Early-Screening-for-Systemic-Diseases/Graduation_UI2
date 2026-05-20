@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import '../data/repository/prediction_repository.dart';
@@ -108,11 +109,21 @@ class PredictionCubit extends Cubit<PredictionState> {
   }) async {
     emit(PredictionLoading());
     try {
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      var combinedImageUrl = imageFile.path;
+      if (userId != null) {
+        try {
+          combinedImageUrl = await _repository.uploadImageToStorage(imageFile, userId);
+        } catch (e) {
+          print('[PredictionCubit] Image upload failed: $e');
+        }
+      }
+
       final imgFuture = disease == 'Anemia'
-          ? _repository.predictAnemiaImage(imageFile, imageFile.path)
+          ? _repository.predictAnemiaImage(imageFile, combinedImageUrl)
           : disease == 'Skin Cancer'
-              ? _repository.predictSkinCancerImage(imageFile, imageFile.path)
-              : _repository.predictImage(imageFile, imageFile.path);
+              ? _repository.predictSkinCancerImage(imageFile, combinedImageUrl)
+              : _repository.predictImage(imageFile, combinedImageUrl);
 
       final imgResp = await imgFuture;
 
@@ -122,21 +133,21 @@ class PredictionCubit extends Cubit<PredictionState> {
         imgScore = r.probability * 100;
         if (disease == 'Anemia') {
           imageRecord = {
-            'imageUrl': imageFile.path,
+            'imageUrl': combinedImageUrl,
             'anemiaStatus': r.prediction,
             'hbValue': r.probability,
             'timestamp': DateTime.now().toIso8601String(),
           };
         } else if (disease == 'Skin Cancer') {
           imageRecord = {
-            'imageUrl': imageFile.path,
+            'imageUrl': combinedImageUrl,
             'predictedClass': r.prediction,
             'confidence': r.probability,
             'timestamp': DateTime.now().toIso8601String(),
           };
         } else {
           imageRecord = {
-            'imageUrl': imageFile.path,
+            'imageUrl': combinedImageUrl,
             'prediction': r.prediction,
             'probabilityNonDiabetes': r.probability,
             'timestamp': DateTime.now().toIso8601String(),

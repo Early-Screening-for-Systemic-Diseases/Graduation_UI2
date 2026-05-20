@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import '../../../features/auth/data/models/user_model.dart';
 import '../../chat/rating_widget.dart';
+import '../../../core/widgets/local_or_network_image.dart';
 
 class AnalysisHistoryScreen extends StatefulWidget {
   final String disease;
@@ -252,16 +252,16 @@ class _HistoryCard extends StatelessWidget {
 
             // ── Image thumbnail if available ──
             if (result.imageRecord['imageUrl'] != null &&
-                (result.imageRecord['imageUrl'] as String).isNotEmpty &&
-                File(result.imageRecord['imageUrl'] as String).existsSync()) ...[
+                (result.imageRecord['imageUrl'] as String).isNotEmpty) ...[
               SizedBox(height: 12.h),
               ClipRRect(
                 borderRadius: BorderRadius.circular(10.r),
-                child: Image.file(
-                  File(result.imageRecord['imageUrl'] as String),
+                child: LocalOrNetworkImage(
+                  imageUrl: result.imageRecord['imageUrl'] as String,
                   height: 80.h,
                   width: double.infinity,
                   fit: BoxFit.cover,
+                  placeholder: Container(color: Colors.grey.shade200),
                 ),
               ),
             ],
@@ -476,15 +476,15 @@ class _HistoryDetailScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (result.imageRecord['imageUrl'] != null &&
-                    (result.imageRecord['imageUrl'] as String).isNotEmpty &&
-                    File(result.imageRecord['imageUrl'] as String).existsSync())
+                    (result.imageRecord['imageUrl'] as String).isNotEmpty)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10.r),
-                    child: Image.file(
-                      File(result.imageRecord['imageUrl'] as String),
+                    child: LocalOrNetworkImage(
+                      imageUrl: result.imageRecord['imageUrl'] as String,
                       height: 160.h,
                       width: double.infinity,
                       fit: BoxFit.cover,
+                      placeholder: Container(color: Colors.grey.shade200),
                     ),
                   ),
                 SizedBox(height: 10.h),
