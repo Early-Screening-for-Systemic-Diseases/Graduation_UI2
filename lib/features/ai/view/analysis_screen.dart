@@ -23,7 +23,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> with SingleTickerProvid
 
   static const _tabs = [
     _TabMeta('Diabetes',    '🔬', Colors.blueAccent,        Color(0xFF1565C0)),
-    _TabMeta('Anemia',      '🩸', Colors.redAccent,         Color(0xFFB71C1C)),
     _TabMeta('Skin Cancer', '🔆', Color(0xFF6A1B9A),        Color(0xFF4A148C)),
   ];
 
@@ -138,17 +137,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> with SingleTickerProvid
                     ),
                     _DiseaseTab(
                       combinedResults: user.combinedResults
-                          .where((r) => r.disease.toLowerCase() == 'anemia')
-                          .toList()
-                        ..sort((a, b) => b.timestamp.compareTo(a.timestamp)),
-                      meta: _tabs[1],
-                    ),
-                    _DiseaseTab(
-                      combinedResults: user.combinedResults
                           .where((r) => r.disease.toLowerCase() == 'skin cancer')
                           .toList()
                         ..sort((a, b) => b.timestamp.compareTo(a.timestamp)),
-                      meta: _tabs[2],
+                      meta: _tabs[1],
                     ),
                   ],
                 );

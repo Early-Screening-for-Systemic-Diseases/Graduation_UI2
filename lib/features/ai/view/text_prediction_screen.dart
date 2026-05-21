@@ -4,7 +4,6 @@ import '../../../core/service/service_locator.dart';
 import '../viewmodel/prediction_cubit.dart';
 import '../viewmodel/prediction_state.dart';
 import 'disease_detail_screen.dart';
-import 'anemia_detail_screen.dart';
 import 'diabetes_detail_screen.dart';
 import 'skin_cancer_detail_screen.dart';
 
@@ -57,7 +56,6 @@ class _TextPredictionScreenState extends State<TextPredictionScreen> {
                     MaterialPageRoute(
                       builder: (context) {
                         final fd = normalized;
-                        if (fd == 'anemia') return AnemiaDetailScreen(detail: detail!);
                         if (fd == 'skincancer') return SkinCancerDetailScreen(detail: detail!);
                         return DiabetesDetailScreen(detail: detail!);
                       },

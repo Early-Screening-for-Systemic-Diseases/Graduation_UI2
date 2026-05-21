@@ -391,13 +391,11 @@ class _PatientResultsScreenState extends State<_PatientResultsScreen> {
 
   static const _diseaseColors = {
     'diabetes': Colors.blueAccent,
-    'anemia': Colors.redAccent,
     'skin cancer': Color(0xFF6A1B9A),
   };
 
   static const _diseaseIcons = {
     'diabetes': '🔬',
-    'anemia': '🩸',
     'skin cancer': '🔆',
   };
 

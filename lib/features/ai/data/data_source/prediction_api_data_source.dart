@@ -13,8 +13,6 @@ import 'prediction_remote_data_source.dart';
 class PredictionApiDataSource implements PredictionRemoteDataSource {
   final Dio _mainDio;
   final Dio _predictDio;
-  final Dio _anemiaDio;
-  final Dio _anemiaSurveyDio;
   final Dio _skinCancerDio;
   final Dio _skinCancerSurveyDio;
   final Dio _textPredictDio;
@@ -22,8 +20,6 @@ class PredictionApiDataSource implements PredictionRemoteDataSource {
   PredictionApiDataSource(
     @Named('MainDio') this._mainDio,
     @Named('PredictDio') this._predictDio,
-    @Named('AnemiaDio') this._anemiaDio,
-    @Named('AnemiaSurveyDio') this._anemiaSurveyDio,
     @Named('SkinCancerDio') this._skinCancerDio,
     @Named('SkinCancerSurveyDio') this._skinCancerSurveyDio,
     @Named('TextPredictDio') this._textPredictDio,
@@ -71,34 +67,6 @@ class PredictionApiDataSource implements PredictionRemoteDataSource {
       return PredictionResponse.fromJson(response.data);
     } on DioException catch (e) {
       print('Diabetes Survey Error: ${e.response?.statusCode} ${e.response?.data}');
-      throw ApiErrorHandler.handleDioError(e);
-    }
-  }
-
-  @override
-  Future<PredictionResponse> predictAnemiaImage(File imageFile) async {
-    try {
-      final formData = FormData.fromMap({'file': await _rawMultipart(imageFile)});
-      _logRequest(_anemiaDio, ApiEndpoints.anemiaPredict, formData);
-      final response = await _anemiaDio.post(ApiEndpoints.anemiaPredict, data: formData);
-      print('[Anemia Image] Response: ${response.data}');
-      return PredictionResponse.fromJson(response.data);
-    } on DioException catch (e) {
-      print('[Anemia Image] Error: ${e.response?.statusCode} ${e.response?.data}');
-      throw ApiErrorHandler.handleDioError(e);
-    }
-  }
-
-  @override
-  Future<PredictionResponse> predictAnemiaSurvey(Map<String, dynamic> surveyData) async {
-    try {
-      final response = await _anemiaSurveyDio.post(
-        ApiEndpoints.anemiaSurveyPredict,
-        data: surveyData,
-      );
-      print('Anemia Survey Response: ${response.data}');
-      return PredictionResponse.fromJson(response.data);
-    } on DioException catch (e) {
       throw ApiErrorHandler.handleDioError(e);
     }
   }

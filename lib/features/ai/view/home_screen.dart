@@ -6,7 +6,6 @@ import '../../auth/presentation/cubit/auth_hydrated_cubit.dart';
 import '../../auth/presentation/cubit/auth_state.dart';
 import '../widgets/category_card.dart';
 import 'diabetes_analysis_screen.dart';
-import 'anemia_analysis_screen.dart';
 import 'skin_cancer_analysis_screen.dart';
 import 'mode_selection_modal.dart';
 import '../../clinical_guidance/view/guidance_detail_screen.dart';
@@ -139,18 +138,6 @@ class HomeScreen extends StatelessWidget {
               mainAxisSpacing: 14.h,
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const AnemiaAnalysisScreen()),
-                  ),
-                  child: const CategoryCard(
-                    icon: '🩸',
-                    name: 'Anemia',
-                    color: Colors.redAccent,
-                    subtitle: 'Eye · Survey · Symptoms',
-                  ),
-                ),
-                GestureDetector(
                   onTap: () async {
                     final mode = await showModeSelectionModal(
                       context,
@@ -207,18 +194,6 @@ class HomeScreen extends StatelessWidget {
 
             Row(
               children: [
-                Expanded(
-                  child: _GuidanceCard(
-                    label: 'Anemia',
-                    icon: '🩸',
-                    color: const Color(0xFFE53935),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const GuidanceDetailScreen(type: 'anemia')),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12.w),
                 Expanded(
                   child: _GuidanceCard(
                     label: 'Diabetes',

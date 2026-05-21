@@ -52,10 +52,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i59.FirebaseAuth>(() => registerModule.firebaseAuth);
     gh.lazySingleton<_i974.FirebaseFirestore>(() => registerModule.firestore);
     gh.singleton<_i361.Dio>(
-      () => registerModule.anemiaSurveyDio,
-      instanceName: 'AnemiaSurveyDio',
-    );
-    gh.singleton<_i361.Dio>(
       () => registerModule.predictDio,
       instanceName: 'PredictDio',
     );
@@ -78,10 +74,6 @@ extension GetItInjectableX on _i174.GetIt {
       instanceName: 'SkinCancerSurveyDio',
     );
     gh.singleton<_i361.Dio>(
-      () => registerModule.anemiaDio,
-      instanceName: 'AnemiaDio',
-    );
-    gh.singleton<_i361.Dio>(
       () => registerModule.skincancerDio,
       instanceName: 'SkinCancerDio',
     );
@@ -101,8 +93,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i732.PredictionApiDataSource(
         gh<_i361.Dio>(instanceName: 'MainDio'),
         gh<_i361.Dio>(instanceName: 'PredictDio'),
-        gh<_i361.Dio>(instanceName: 'AnemiaDio'),
-        gh<_i361.Dio>(instanceName: 'AnemiaSurveyDio'),
         gh<_i361.Dio>(instanceName: 'SkinCancerDio'),
         gh<_i361.Dio>(instanceName: 'SkinCancerSurveyDio'),
         gh<_i361.Dio>(instanceName: 'TextPredictDio'),

@@ -30,38 +30,6 @@ class DiabetesRecord {
   }
 }
 
-class AnemiaRecord {
-  final String imageUrl;
-  final String anemiaStatus;
-  final double hbValue;
-  final DateTime timestamp;
-
-  const AnemiaRecord({
-    required this.imageUrl,
-    required this.anemiaStatus,
-    required this.hbValue,
-    required this.timestamp,
-  });
-
-  factory AnemiaRecord.fromJson(Map<String, dynamic> json) {
-    return AnemiaRecord(
-      imageUrl: json['imageUrl'] ?? '',
-      anemiaStatus: json['anemiaStatus'] ?? '',
-      hbValue: (json['hbValue'] ?? 0.0).toDouble(),
-      timestamp: DateTime.parse(json['timestamp']),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'imageUrl': imageUrl,
-      'anemiaStatus': anemiaStatus,
-      'hbValue': hbValue,
-      'timestamp': timestamp.toIso8601String(),
-    };
-  }
-}
-
 class DiabetesSurvey {
   final String diabetes;
   final double probability;
@@ -88,38 +56,6 @@ class DiabetesSurvey {
     return {
       'diabetes': diabetes,
       'probability': probability,
-      'timestamp': timestamp.toIso8601String(),
-      'surveyData': surveyData,
-    };
-  }
-}
-
-class AnemiaSurvey {
-  final String prediction;
-  final double anemiaProbability;
-  final DateTime timestamp;
-  final Map<String, dynamic> surveyData;
-
-  const AnemiaSurvey({
-    required this.prediction,
-    required this.anemiaProbability,
-    required this.timestamp,
-    required this.surveyData,
-  });
-
-  factory AnemiaSurvey.fromJson(Map<String, dynamic> json) {
-    return AnemiaSurvey(
-      prediction: json['prediction'] ?? '',
-      anemiaProbability: (json['anemiaProbability'] ?? 0.0).toDouble(),
-      timestamp: DateTime.parse(json['timestamp']),
-      surveyData: Map<String, dynamic>.from(json['surveyData'] ?? {}),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'prediction': prediction,
-      'anemiaProbability': anemiaProbability,
       'timestamp': timestamp.toIso8601String(),
       'surveyData': surveyData,
     };
@@ -257,9 +193,7 @@ class UserModel {
   final bool? consentDoctorAccess;
   final bool? consentModelTraining;
   final List<DiabetesRecord> diabetesRecords;
-  final List<AnemiaRecord> anemiaRecords;
   final List<DiabetesSurvey> diabetesSurveys;
-  final List<AnemiaSurvey> anemiaSurveys;
   final List<SkinCancerRecord> skinCancerRecords;
   final List<SkinCancerSurvey> skinCancerSurveys;
   final List<CombinedAnalysisResult> combinedResults;
@@ -273,9 +207,7 @@ class UserModel {
     this.consentDoctorAccess,
     this.consentModelTraining,
     this.diabetesRecords = const [],
-    this.anemiaRecords = const [],
     this.diabetesSurveys = const [],
-    this.anemiaSurveys = const [],
     this.skinCancerRecords = const [],
     this.skinCancerSurveys = const [],
     this.combinedResults = const [],
@@ -294,12 +226,8 @@ class UserModel {
       consentModelTraining: cmt is bool ? cmt : null,
       diabetesRecords: (json['diabetesRecords'] as List<dynamic>?)
           ?.map((e) => DiabetesRecord.fromJson(e)).toList() ?? [],
-      anemiaRecords: (json['anemiaRecords'] as List<dynamic>?)
-          ?.map((e) => AnemiaRecord.fromJson(e)).toList() ?? [],
       diabetesSurveys: (json['diabetesSurveys'] as List<dynamic>?)
           ?.map((e) => DiabetesSurvey.fromJson(e)).toList() ?? [],
-      anemiaSurveys: (json['anemiaSurveys'] as List<dynamic>?)
-          ?.map((e) => AnemiaSurvey.fromJson(e)).toList() ?? [],
       skinCancerRecords: (json['skinCancerRecords'] as List<dynamic>?)
           ?.map((e) => SkinCancerRecord.fromJson(e)).toList() ?? [],
       skinCancerSurveys: (json['skinCancerSurveys'] as List<dynamic>?)
@@ -319,9 +247,7 @@ class UserModel {
       if (consentDoctorAccess != null) 'consentDoctorAccess': consentDoctorAccess,
       if (consentModelTraining != null) 'consentModelTraining': consentModelTraining,
       'diabetesRecords': diabetesRecords.map((e) => e.toJson()).toList(),
-      'anemiaRecords': anemiaRecords.map((e) => e.toJson()).toList(),
       'diabetesSurveys': diabetesSurveys.map((e) => e.toJson()).toList(),
-      'anemiaSurveys': anemiaSurveys.map((e) => e.toJson()).toList(),
       'skinCancerRecords': skinCancerRecords.map((e) => e.toJson()).toList(),
       'skinCancerSurveys': skinCancerSurveys.map((e) => e.toJson()).toList(),
       'combinedResults': combinedResults.map((e) => e.toJson()).toList(),

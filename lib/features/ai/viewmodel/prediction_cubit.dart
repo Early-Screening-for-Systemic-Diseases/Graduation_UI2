@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import '../data/repository/prediction_repository.dart';
 import '../data/model/health_data_model.dart';
-import '../data/model/anemia_survey_model.dart';
 import 'prediction_state.dart';
 
 @lazySingleton
@@ -43,24 +42,9 @@ class PredictionCubit extends Cubit<PredictionState> {
     );
   }
 
-  Future<void> predictAnemiaImage(File imageFile, String imageUrl) async {
+  Future<void> predictSkinCancerImage(File imageFile, String imageUrl) async {
     emit(PredictionLoading());
-    final response = await _repository.predictAnemiaImage(imageFile, imageUrl);
-    response.fold(
-      (failure) => emit(PredictionError(failure.message)),
-      (predictionResponse) => emit(
-        PredictionSuccess(
-          predictionResponse.prediction,
-          probability: predictionResponse.probability,
-          message: predictionResponse.message,
-        ),
-      ),
-    );
-  }
-
-  Future<void> predictAnemiaSurvey(Map<String, dynamic> surveyData) async {
-    emit(PredictionLoading());
-    final response = await _repository.predictAnemiaSurvey(surveyData);
+    final response = await _repository.predictSkinCancerImage(imageFile, imageUrl);
     response.fold(
       (failure) => emit(PredictionError(failure.message)),
       (predictionResponse) => emit(
@@ -119,11 +103,9 @@ class PredictionCubit extends Cubit<PredictionState> {
         }
       }
 
-      final imgFuture = disease == 'Anemia'
-          ? _repository.predictAnemiaImage(imageFile, combinedImageUrl)
-          : disease == 'Skin Cancer'
-              ? _repository.predictSkinCancerImage(imageFile, combinedImageUrl)
-              : _repository.predictImage(imageFile, combinedImageUrl);
+      final imgFuture = disease == 'Skin Cancer'
+          ? _repository.predictSkinCancerImage(imageFile, combinedImageUrl)
+          : _repository.predictImage(imageFile, combinedImageUrl);
 
       final imgResp = await imgFuture;
 
@@ -131,14 +113,7 @@ class PredictionCubit extends Cubit<PredictionState> {
       Map<String, dynamic> imageRecord = {};
       imgResp.fold((f) => throw Exception(f.message), (r) {
         imgScore = r.probability * 100;
-        if (disease == 'Anemia') {
-          imageRecord = {
-            'imageUrl': combinedImageUrl,
-            'anemiaStatus': r.prediction,
-            'hbValue': r.probability,
-            'timestamp': DateTime.now().toIso8601String(),
-          };
-        } else if (disease == 'Skin Cancer') {
+        if (disease == 'Skin Cancer') {
           imageRecord = {
             'imageUrl': combinedImageUrl,
             'predictedClass': r.prediction,
@@ -164,11 +139,9 @@ class PredictionCubit extends Cubit<PredictionState> {
       if (predictionMode == 'fast') {
         finalScore = imgScore;
       } else {
-        final surveyFuture = disease == 'Anemia'
-            ? _repository.predictAnemiaSurvey(surveyData)
-            : disease == 'Skin Cancer'
-                ? _repository.predictSkinCancerSurvey(surveyData)
-                : _repository.predictHealthData(HealthDataModel.fromJson(surveyData));
+        final surveyFuture = disease == 'Skin Cancer'
+            ? _repository.predictSkinCancerSurvey(surveyData)
+            : _repository.predictHealthData(HealthDataModel.fromJson(surveyData));
         final nlpFuture = _repository.predictFromText(symptomText);
 
         final surveyResp = await surveyFuture;
@@ -176,14 +149,7 @@ class PredictionCubit extends Cubit<PredictionState> {
 
         surveyResp.fold((f) => throw Exception(f.message), (r) {
           surveyScore = r.probability * 100;
-          if (disease == 'Anemia') {
-            surveyRecord = {
-              'prediction': r.prediction,
-              'anemiaProbability': r.probability,
-              'surveyData': surveyData,
-              'timestamp': DateTime.now().toIso8601String(),
-            };
-          } else if (disease == 'Skin Cancer') {
+          if (disease == 'Skin Cancer') {
             surveyRecord = {
               'riskLevel': r.prediction,
               'riskScore': r.probability,

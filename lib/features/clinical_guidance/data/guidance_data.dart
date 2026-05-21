@@ -1,17 +1,4 @@
 class GuidanceData {
-  static const Map<String, String> anemiaGuidance = {
-    'title': 'Anemia',
-    'icon': '🩸',
-    'overview':
-        'Anemia occurs when you don\'t have enough healthy red blood cells to carry adequate oxygen to your body\'s tissues. The most common type is iron-deficiency anemia.',
-    'diet':
-        '• Eat iron-rich foods: lean meats, fish, poultry, legumes (lentils, beans), and dark green leafy vegetables.\n\n• Boost iron absorption by pairing iron-rich foods with vitamin C sources (citrus fruits, peppers, tomatoes).\n\n• Avoid tea, coffee, and cocoa alongside iron-rich meals — they reduce iron absorption.\n\n• Include folate-rich foods: leafy greens, fortified cereals, and citrus fruits.\n\n• Ensure adequate vitamin B12 intake through meat, dairy, and eggs.',
-    'lifestyle':
-        '• Practice good food hygiene and handwashing to reduce infections that worsen anemia.\n\n• Follow malaria prevention guidance in endemic areas.\n\n• Get regular blood tests to monitor hemoglobin levels.\n\n• Avoid excessive physical exertion when symptoms are severe.\n\n• Consult a doctor before taking iron supplements — excess iron can be harmful.',
-    'symptoms':
-        '• Fatigue and weakness\n• Pale or yellowish skin\n• Irregular heartbeat\n• Shortness of breath\n• Dizziness or lightheadedness\n• Chest pain\n• Cold hands and feet\n• Headaches',
-  };
-
   static const Map<String, String> diabetesGuidance = {
     'title': 'Diabetes',
     'icon': '🔬',

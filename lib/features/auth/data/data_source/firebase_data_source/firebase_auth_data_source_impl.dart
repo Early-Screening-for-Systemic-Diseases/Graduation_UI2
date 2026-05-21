@@ -99,23 +99,9 @@ class FirebaseAuthDataSourceImpl implements FirebaseAuthDataSource {
   }
 
   @override
-  Future<void> addAnemiaRecord(String userId, AnemiaRecord record) async {
-    await _users.doc(userId).update({
-      'anemiaRecords': FieldValue.arrayUnion([record.toJson()]),
-    });
-  }
-
-  @override
   Future<void> addDiabetesSurvey(String userId, DiabetesSurvey survey) async {
     await _users.doc(userId).update({
       'diabetesSurveys': FieldValue.arrayUnion([survey.toJson()]),
-    });
-  }
-
-  @override
-  Future<void> addAnemiaSurvey(String userId, AnemiaSurvey survey) async {
-    await _users.doc(userId).update({
-      'anemiaSurveys': FieldValue.arrayUnion([survey.toJson()]),
     });
   }
 

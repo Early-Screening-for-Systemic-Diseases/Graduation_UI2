@@ -49,7 +49,7 @@ class _UploadScreenState extends State<UploadScreen> {
     if (widget.category == 'Diabetes') {
       context.read<PredictionCubit>().predictImage(_selectedImage!, _selectedImage!.path);
     } else {
-      context.read<PredictionCubit>().predictAnemiaImage(_selectedImage!, _selectedImage!.path);
+      context.read<PredictionCubit>().predictSkinCancerImage(_selectedImage!, _selectedImage!.path);
     }
   }
 
@@ -61,7 +61,7 @@ class _UploadScreenState extends State<UploadScreen> {
     final resultColor = isPositive ? Colors.red : Colors.green;
     final resultLabel = widget.category == 'Diabetes'
         ? (isPositive ? 'Diabetic' : 'Not Diabetic')
-        : (isPositive ? 'Anemia Detected' : 'No Anemia');
+        : (isPositive ? 'Cancer Detected' : 'No Cancer Detected');
 
     showModalBottomSheet(
       context: context,

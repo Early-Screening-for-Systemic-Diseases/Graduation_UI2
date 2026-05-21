@@ -83,57 +83,6 @@ class PredictionRepository {
     }
   }
 
-  Future<Either<Failure, PredictionResponse>> predictAnemiaImage(
-    File imageFile,
-    String imageUrl,
-  ) async {
-    try {
-      final response = await _dataSource.predictAnemiaImage(imageFile);
-      final userId = _auth.currentUser?.uid;
-      if (userId != null) {
-        var recordedImageUrl = imageUrl;
-        if (!_isRemoteUrl(imageUrl)) {
-          try {
-            recordedImageUrl = await _uploadImageToStorage(imageFile, userId);
-          } catch (e) {
-            print('[PredictionRepository] Firebase Storage upload failed: $e');
-          }
-        }
-        final record = AnemiaRecord(
-          imageUrl: recordedImageUrl,
-          anemiaStatus: response.prediction,
-          hbValue: response.probability,
-          timestamp: DateTime.now(),
-        );
-        await _firebaseDataSource.addAnemiaRecord(userId, record);
-      }
-      return Right(response);
-    } on RemoteException catch (e) {
-      return Left(Failure(e.message));
-    }
-  }
-
-  Future<Either<Failure, PredictionResponse>> predictAnemiaSurvey(
-    Map<String, dynamic> surveyData,
-  ) async {
-    try {
-      final response = await _dataSource.predictAnemiaSurvey(surveyData);
-      final userId = _auth.currentUser?.uid;
-      if (userId != null) {
-        final survey = AnemiaSurvey(
-          prediction: response.prediction,
-          anemiaProbability: response.probability,
-          timestamp: DateTime.now(),
-          surveyData: surveyData,
-        );
-        await _firebaseDataSource.addAnemiaSurvey(userId, survey);
-      }
-      return Right(response);
-    } on RemoteException catch (e) {
-      return Left(Failure(e.message));
-    }
-  }
-
   Future<Either<Failure, PredictionResponse>> predictSkinCancerImage(
     File imageFile,
     String imageUrl,

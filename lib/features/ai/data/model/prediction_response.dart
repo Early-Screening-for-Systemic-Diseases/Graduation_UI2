@@ -72,33 +72,6 @@ class PredictionResponse {
       );
     }
 
-    // ── Anemia image API ──────────────────────────────────────────────────────
-    // { anemia_status, hb_value }
-    if (json.containsKey('anemia_status')) {
-      final hb = (json['hb_value'] as num?)?.toDouble() ?? 12.0;
-      final riskProb = ((17.0 - hb.clamp(5.0, 17.0)) / 12.0).clamp(0.0, 1.0);
-      final isAnemic = (json['anemia_status'] ?? '').toString().toLowerCase().contains('anemi');
-      print('→ Anemia Image: anemia_status=${json['anemia_status']} hb=$hb riskProb=$riskProb');
-      return PredictionResponse(
-        prediction: isAnemic ? '1' : '0',
-        probability: riskProb,
-      );
-    }
-
-    // ── Anemia survey API ─────────────────────────────────────────────────────
-    // { anemia_probability }
-    if (json.containsKey('anemia_probability')) {
-      final prob = (json['anemia_probability'] as num).toDouble();
-      print('→ Anemia Survey: anemia_probability=$prob');
-      return PredictionResponse(
-        prediction: prob >= 0.5 ? '1' : '0',
-        probability: prob,
-        message: prob >= 0.5
-            ? 'Likely to have anemia (${(prob * 100).toStringAsFixed(1)}%)'
-            : 'Not likely to have anemia (${((1 - prob) * 100).toStringAsFixed(1)}%)',
-      );
-    }
-
     // ── Fallback ──────────────────────────────────────────────────────────────
     print('→ Fallback: prediction=${json['prediction']} probability=${json['probability']}');
     return PredictionResponse(

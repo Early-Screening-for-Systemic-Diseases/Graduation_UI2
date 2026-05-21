@@ -10,19 +10,16 @@ class GuidanceDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = switch (type) {
-      'anemia'     => GuidanceData.anemiaGuidance,
       'diabetes'   => GuidanceData.diabetesGuidance,
       _            => GuidanceData.skinCancerGuidance,
     };
 
     final color = switch (type) {
-      'anemia'     => const Color(0xFFE53935),
       'diabetes'   => const Color(0xFF1E88E5),
       _            => const Color(0xFF6A1B9A),
     };
 
     final List<Color> gradientColors = switch (type) {
-      'anemia'   => [const Color(0xFFE53935), const Color(0xFFB71C1C)],
       'diabetes' => [const Color(0xFF1E88E5), const Color(0xFF1565C0)],
       _          => [const Color(0xFF8E24AA), const Color(0xFF6A1B9A)],
     };

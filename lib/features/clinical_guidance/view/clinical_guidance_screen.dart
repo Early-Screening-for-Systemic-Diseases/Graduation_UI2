@@ -20,19 +20,6 @@ class ClinicalGuidanceScreen extends StatelessWidget {
           children: [
             _buildGuidanceCard(
               context,
-              title: 'Anemia',
-              icon: Icons.bloodtype,
-              color: const Color(0xFFE53935),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const GuidanceDetailScreen(type: 'anemia'),
-                ),
-              ),
-            ),
-            SizedBox(height: 20.h),
-            _buildGuidanceCard(
-              context,
               title: 'Diabetes',
               icon: Icons.monitor_heart,
               color: const Color(0xFF1E88E5),
