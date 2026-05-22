@@ -9,14 +9,26 @@ class PredictionResponse {
     print('PredictionResponse.fromJson keys: ${json.keys.toList()}');
     print('PredictionResponse.fromJson data: $json');
 
-    // ── Skin Cancer image API ─────────────────────────────────────────────────
+    // ── Skin Cancer image API (new) ───────────────────────────────────────────
+    // { cancer_risk_probability, cancer_risk_percent, risk_level, ... }
+    if (json.containsKey('cancer_risk_probability')) {
+      final probability = (json['cancer_risk_probability'] as num).toDouble();
+      final riskLevel = json['risk_level']?.toString() ?? '';
+      print('→ SkinCancer Image (new): cancer_risk_probability=$probability riskLevel=$riskLevel');
+      return PredictionResponse(
+        prediction: riskLevel,
+        probability: probability.clamp(0.0, 1.0),
+      );
+    }
+
+    // ── Skin Cancer image API (old) ───────────────────────────────────────────
     // { predicted_class, confidence, all_probabilities: {NV, MEL, BCC} }
     if (json.containsKey('predicted_class') && json.containsKey('all_probabilities')) {
       final predicted = json['predicted_class']?.toString().trim().toUpperCase() ?? '';
       final confidence = (json['confidence'] as num?)?.toDouble() ?? 0.0;
       final isMalignant = predicted == 'MEL' || predicted == 'BCC';
       final probability = isMalignant ? confidence : 1.0 - confidence;
-      print('→ SkinCancer Image: predicted=$predicted confidence=$confidence isMalignant=$isMalignant probability=$probability');
+      print('→ SkinCancer Image (old): predicted=$predicted confidence=$confidence isMalignant=$isMalignant probability=$probability');
       return PredictionResponse(
         prediction: predicted,
         probability: probability,
@@ -47,13 +59,25 @@ class PredictionResponse {
       );
     }
 
-    // ── Diabetes image API ────────────────────────────────────────────────────
+    // ── Diabetes image API (new) ──────────────────────────────────────────────
+    // { predicted_class, hybrid_probability, cnn_probability, risk_band, ... }
+    if (json.containsKey('hybrid_probability')) {
+      final probability = (json['hybrid_probability'] as num).toDouble();
+      final predicted = json['predicted_class']?.toString() ?? '';
+      print('→ Diabetes Image (new): predicted_class=$predicted hybrid_probability=$probability');
+      return PredictionResponse(
+        prediction: predicted,
+        probability: probability.clamp(0.0, 1.0),
+      );
+    }
+
+    // ── Diabetes image API (old) ──────────────────────────────────────────────
     // { prediction, confidence_percentage }
     if (json.containsKey('confidence_percentage')) {
       final confidence = (json['confidence_percentage'] as num).toDouble() / 100.0;
       final isNonDiabetic = (json['prediction'] ?? '').toString().toLowerCase().contains('non');
       final probability = isNonDiabetic ? 1.0 - confidence : confidence;
-      print('→ Diabetes Image: prediction=${json['prediction']} confidence_percentage=${json['confidence_percentage']} isNonDiabetic=$isNonDiabetic probability=$probability');
+      print('→ Diabetes Image (old): prediction=${json['prediction']} confidence_percentage=${json['confidence_percentage']} isNonDiabetic=$isNonDiabetic probability=$probability');
       return PredictionResponse(
         prediction: json['prediction'] ?? '',
         probability: probability,

@@ -28,11 +28,13 @@ class PredictionApiDataSource implements PredictionRemoteDataSource {
   Future<MultipartFile> _rawMultipart(File imageFile) async {
     final bytes = await imageFile.readAsBytes();
     final filename = imageFile.path.split(RegExp(r'[\\/]')).last;
-    print('[Image] file: $filename | size: ${bytes.length} bytes | first10bytes: ${bytes.take(10).toList()}');
+    final ext = filename.split('.').last.toLowerCase();
+    final mimeSubtype = (ext == 'png') ? 'png' : 'jpeg';
+    print('[Image] file: $filename | size: ${bytes.length} bytes | mime=image/$mimeSubtype');
     return MultipartFile.fromBytes(
       bytes,
       filename: filename,
-      contentType: MediaType('application', 'octet-stream'),
+      contentType: MediaType('image', mimeSubtype),
     );
   }
 
