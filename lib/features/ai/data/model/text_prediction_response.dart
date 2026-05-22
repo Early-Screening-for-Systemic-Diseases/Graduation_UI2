@@ -1,65 +1,25 @@
 class TextPredictionResponse {
-  final String text;
-  final bool lexiconMatched;
-  final List<DiseaseResult> results;
-  final Map<String, DiseaseDetail> resultsMap;
+  final String prediction;
+  final double finalScore; // 0.0 – 1.0
 
-  TextPredictionResponse({
-    required this.text,
-    required this.lexiconMatched,
-    required this.results,
-    required this.resultsMap,
-  });
+  TextPredictionResponse({required this.prediction, required this.finalScore});
 
   factory TextPredictionResponse.fromJson(Map<String, dynamic> json) {
     return TextPredictionResponse(
-      text: json['text'] ?? '',
-      lexiconMatched: json['lexicon_matched'] ?? false,
-      results: (json['results'] as List?)
-              ?.map((e) => DiseaseResult.fromJson(e))
-              .toList() ??
-          [],
-      resultsMap: (json['results_map'] as Map<String, dynamic>?)?.map(
-            (key, value) => MapEntry(key, DiseaseDetail.fromJson(value)),
-          ) ??
-          {},
+      prediction: json['prediction']?.toString() ?? '',
+      finalScore: (json['final_score'] as num?)?.toDouble() ?? 0.0,
     );
   }
-}
 
-class DiseaseResult {
-  final String disease;
-  final List<String> matchedSymptoms;
-  final double percentage;
+  double get percentage => finalScore * 100;
 
-  DiseaseResult({
-    required this.disease,
-    required this.matchedSymptoms,
-    required this.percentage,
-  });
-
-  factory DiseaseResult.fromJson(Map<String, dynamic> json) {
-    return DiseaseResult(
-      disease: json['disease'] ?? '',
-      matchedSymptoms: List<String>.from(json['matched_symptoms'] ?? []),
-      percentage: (json['percentage'] ?? 0.0).toDouble(),
-    );
-  }
+  DiseaseDetail toDiseaseDetail() =>
+      DiseaseDetail(percentage: percentage, matchedSymptoms: const []);
 }
 
 class DiseaseDetail {
   final double percentage;
   final List<String> matchedSymptoms;
 
-  DiseaseDetail({
-    required this.percentage,
-    required this.matchedSymptoms,
-  });
-
-  factory DiseaseDetail.fromJson(Map<String, dynamic> json) {
-    return DiseaseDetail(
-      percentage: (json['percentage'] ?? 0.0).toDouble(),
-      matchedSymptoms: List<String>.from(json['matched_symptoms'] ?? []),
-    );
-  }
+  DiseaseDetail({required this.percentage, required this.matchedSymptoms});
 }

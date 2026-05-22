@@ -44,20 +44,21 @@ class _TextPredictionScreenState extends State<TextPredictionScreen> {
           listener: (context, state) {
             if (state is TextPredictionSuccess) {
               if (widget.filterDisease != null) {
-                final normalized = widget.filterDisease!.toLowerCase().replaceAll(' ', '');
-                final key = state.response.resultsMap.keys.firstWhere(
-                  (k) => k.toLowerCase().replaceAll(' ', '') == normalized,
-                  orElse: () => '',
-                );
-                final detail = key.isNotEmpty ? state.response.resultsMap[key] : null;
-                if (detail != null) {
+                final normalizedFilter =
+                    widget.filterDisease!.toLowerCase().replaceAll(' ', '');
+                final normalizedPrediction =
+                    state.response.prediction.toLowerCase().replaceAll(' ', '');
+
+                if (normalizedPrediction == normalizedFilter) {
+                  final detail = state.response.toDiseaseDetail();
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
                       builder: (context) {
-                        final fd = normalized;
-                        if (fd == 'skincancer') return SkinCancerDetailScreen(detail: detail!);
-                        return DiabetesDetailScreen(detail: detail!);
+                        if (normalizedFilter == 'skincancer') {
+                          return SkinCancerDetailScreen(detail: detail);
+                        }
+                        return DiabetesDetailScreen(detail: detail);
                       },
                     ),
                   );

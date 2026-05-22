@@ -167,20 +167,17 @@ class PredictionCubit extends Cubit<PredictionState> {
         });
 
         nlpResp.fold((f) => throw Exception(f.message), (r) {
-          final normalized = disease.toLowerCase().replaceAll(' ', '');
-          final key = r.resultsMap.keys.firstWhere(
-            (k) => k.toLowerCase().replaceAll(' ', '') == normalized,
-            orElse: () => '',
-          );
-          nlpScore = key.isNotEmpty ? (r.resultsMap[key]?.percentage ?? 0.0) : 0.0;
+          final normalizedDisease = disease.toLowerCase().replaceAll(' ', '');
+          final normalizedPrediction = r.prediction.toLowerCase().replaceAll(' ', '');
+          nlpScore = normalizedPrediction == normalizedDisease ? r.percentage : 0.0;
           nlpRecord = {
-            'text': r.text,
-            'matched_symptoms': key.isNotEmpty ? (r.resultsMap[key]?.matchedSymptoms ?? []) : [],
+            'prediction': r.prediction,
+            'final_score': r.finalScore,
             'percentage': nlpScore,
           };
         });
 
-        finalScore = (imgScore * 0.60) + (surveyScore * 0.30) + (nlpScore * 0.10);
+        finalScore = (imgScore * 0.60) + (surveyScore * 0.25) + (nlpScore * 0.15);
       }
 
       await _repository.saveCombinedResult(

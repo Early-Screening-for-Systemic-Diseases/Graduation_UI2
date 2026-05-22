@@ -19,7 +19,7 @@ class AnalysisResultScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final score = result.finalScore;
-    final isHighRisk = score >= 50;
+    final isHighRisk = score >= 30;
     final riskColor = isHighRisk ? Colors.red : Colors.green;
     final riskLabel = isHighRisk ? 'High Risk' : 'Low Risk';
 
@@ -175,9 +175,9 @@ class AnalysisResultScreen extends StatelessWidget {
 
                 _ScoreRow(label: 'Image Analysis', score: result.imgScore, weight: '60%', color: color),
                 SizedBox(height: 8.h),
-                _ScoreRow(label: 'Survey', score: result.surveyScore, weight: '30%', color: color),
+                _ScoreRow(label: 'Survey', score: result.surveyScore, weight: '25%', color: color),
                 SizedBox(height: 8.h),
-                _ScoreRow(label: 'Symptom Text', score: result.nlpScore, weight: '10%', color: color),
+                _ScoreRow(label: 'Symptom Text', score: result.nlpScore, weight: '15%', color: color),
 
                 SizedBox(height: 28.h),
 
