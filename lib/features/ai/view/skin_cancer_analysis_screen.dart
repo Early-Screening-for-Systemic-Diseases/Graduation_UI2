@@ -7,8 +7,8 @@ import '../../../core/service/service_locator.dart';
 import '../viewmodel/prediction_cubit.dart';
 import '../viewmodel/prediction_state.dart';
 import '../widgets/analysis_shared_widgets.dart';
+import '../widgets/binary_choice_widget.dart';
 import 'analysis_result_screen.dart';
-
 import 'analysis_history_screen.dart';
 
 class SkinCancerAnalysisScreen extends StatefulWidget {
@@ -124,106 +124,23 @@ class _SkinCancerAnalysisScreenState extends State<SkinCancerAnalysisScreen> {
   }
 
   Widget _dropdown<T>(String label, T value, List<T> options, void Function(T) onChanged) {
-    return Container(
-      padding: EdgeInsets.all(14.w),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500, height: 1.4),
-          ),
-          SizedBox(height: 10.h),
-          DropdownButtonFormField<T>(
-            value: value,
-            isExpanded: true,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                borderSide: BorderSide(color: Colors.grey.shade200),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                borderSide: BorderSide(color: Colors.grey.shade200),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                borderSide: const BorderSide(color: _color),
-              ),
-            ),
-            items: options
-                .map(
-                  (o) => DropdownMenuItem(
-                    value: o,
-                    child: Text(o.toString(), style: TextStyle(fontSize: 13.sp)),
-                  ),
-                )
-                .toList(),
-            onChanged: (v) => setState(() => onChanged(v as T)),
-          ),
-        ],
-      ),
+    return _AnalysisDropdownCard<T>(
+      label: label,
+      value: value,
+      options: options,
+      accentColor: _color,
+      onChanged: (v) => setState(() => onChanged(v)),
     );
   }
 
   Widget _yesNo(String label, String value, void Function(String) onChanged) {
-    return Container(
-      padding: EdgeInsets.all(14.w),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500, height: 1.4),
-          ),
-          SizedBox(height: 12.h),
-          Row(
-            children: ['No', 'Yes'].map((opt) {
-              final selected = value == opt;
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => onChanged(opt)),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    margin: EdgeInsets.only(
-                      right: opt == 'No' ? 4.w : 0,
-                      left: opt == 'Yes' ? 4.w : 0,
-                    ),
-                    padding: EdgeInsets.symmetric(vertical: 12.h),
-                    decoration: BoxDecoration(
-                      color: selected ? _color : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12.r),
-                      border: Border.all(color: selected ? _color : Colors.grey.shade300),
-                    ),
-                    child: Text(
-                      opt,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        color: selected ? Colors.white : Colors.grey.shade600,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
+    return BinaryChoiceWidget(
+      label: label,
+      initialValue: value == 'Yes' ? 1 : 0,
+      onChanged: (v) => setState(() => onChanged(v == 1 ? 'Yes' : 'No')),
+      yesLabel: 'Yes',
+      noLabel: 'No',
+      color: _color,
     );
   }
 
@@ -344,52 +261,10 @@ class _SkinCancerAnalysisScreenState extends State<SkinCancerAnalysisScreen> {
                     SizedBox(height: 12.h),
 
                     // Age
-                    Container(
-                      padding: EdgeInsets.all(14.w),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(14.r),
-                        border: Border.all(color: Colors.grey.shade200),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '1. How old are you?',
-                            style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500),
-                          ),
-                          SizedBox(height: 10.h),
-                          TextFormField(
-                            initialValue: _age.toString(),
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              hintText: 'Enter age',
-                              filled: true,
-                              fillColor: Colors.white,
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 14.w,
-                                vertical: 14.h,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12.r),
-                                borderSide: BorderSide(color: Colors.grey.shade200),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12.r),
-                                borderSide: BorderSide(color: Colors.grey.shade200),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12.r),
-                                borderSide: const BorderSide(color: _color),
-                              ),
-                            ),
-                            onChanged: (v) {
-                              final age = int.tryParse(v);
-                              if (age != null && age >= 1 && age <= 120) setState(() => _age = age);
-                            },
-                          ),
-                        ],
-                      ),
+                    _AnalysisAgeCard(
+                      initialAge: _age,
+                      accentColor: _color,
+                      onChanged: (v) => setState(() => _age = v),
                     ),
                     SizedBox(height: 10.h),
                     _dropdown('2. Natural hair color?', _hairColor, [
@@ -570,26 +445,9 @@ class _SkinCancerAnalysisScreenState extends State<SkinCancerAnalysisScreen> {
                     // ── Step 3: Symptoms Text ──────────────────────
                     const StepHeader(step: '3', title: 'Describe Your Symptoms', color: _color),
                     SizedBox(height: 12.h),
-                    TextField(
+                    _AnalysisSymptomsField(
                       controller: _textController,
-                      maxLines: 4,
-                      decoration: InputDecoration(
-                        hintText: 'e.g., I noticed a dark spot on my arm that has been growing...',
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14.r),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14.r),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14.r),
-                          borderSide: const BorderSide(color: _color),
-                        ),
-                      ),
+                      accentColor: _color,
                     ),
                     SizedBox(height: 32.h),
                     ] else
@@ -651,6 +509,195 @@ class _SkinCancerAnalysisScreenState extends State<SkinCancerAnalysisScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _AnalysisDropdownCard<T> extends StatelessWidget {
+  final String label;
+  final T value;
+  final List<T> options;
+  final Color accentColor;
+  final void Function(T) onChanged;
+
+  const _AnalysisDropdownCard({
+    required this.label,
+    required this.value,
+    required this.options,
+    required this.accentColor,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fillColor = isDark ? const Color(0xFF2A2A3A) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF3A3A5A) : Colors.grey.shade200;
+    return Container(
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E2E) : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: TextStyle(
+                  fontSize: 14.sp, fontWeight: FontWeight.w500, height: 1.4)),
+          SizedBox(height: 10.h),
+          DropdownButtonFormField<T>(
+            initialValue: value,
+            isExpanded: true,
+            dropdownColor: isDark ? const Color(0xFF1E1E2E) : null,
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: fillColor,
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: borderColor)),
+              enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: borderColor)),
+              focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: accentColor)),
+            ),
+            items: options
+                .map((o) => DropdownMenuItem(
+                    value: o,
+                    child: Text(o.toString(),
+                        style: TextStyle(fontSize: 13.sp))))
+                .toList(),
+            onChanged: (v) {
+              if (v != null) onChanged(v);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AnalysisAgeCard extends StatelessWidget {
+  final int initialAge;
+  final Color accentColor;
+  final void Function(int) onChanged;
+
+  const _AnalysisAgeCard({
+    required this.initialAge,
+    required this.accentColor,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fillColor = isDark ? const Color(0xFF2A2A3A) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF3A3A5A) : Colors.grey.shade200;
+    return Container(
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E2E) : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('1. How old are you?',
+              style:
+                  TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500)),
+          SizedBox(height: 10.h),
+          TextFormField(
+            initialValue: initialAge.toString(),
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              hintText: 'Enter age',
+              filled: true,
+              fillColor: fillColor,
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: borderColor)),
+              enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: borderColor)),
+              focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: accentColor)),
+            ),
+            onChanged: (v) {
+              final age = int.tryParse(v);
+              if (age != null && age >= 1 && age <= 120) onChanged(age);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AnalysisSymptomsField extends StatelessWidget {
+  final TextEditingController controller;
+  final Color accentColor;
+
+  const _AnalysisSymptomsField({
+    required this.controller,
+    required this.accentColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1E1E2E) : Colors.white;
+    final fieldFill = isDark ? const Color(0xFF2A2A3A) : Colors.grey.shade50;
+    final borderColor = isDark ? const Color(0xFF3A3A5A) : Colors.grey.shade200;
+    return Container(
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Describe your symptoms',
+            style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500),
+          ),
+          SizedBox(height: 10.h),
+          TextField(
+            controller: controller,
+            maxLines: 4,
+            style: TextStyle(fontSize: 14.sp),
+            decoration: InputDecoration(
+              hintText:
+                  'e.g., I noticed a dark spot on my arm that has been growing...',
+              hintStyle: TextStyle(
+                  color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
+                  fontSize: 13.sp),
+              filled: true,
+              fillColor: fieldFill,
+              contentPadding: EdgeInsets.all(14.w),
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: borderColor)),
+              enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: borderColor)),
+              focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: accentColor)),
+            ),
+          ),
+        ],
       ),
     );
   }

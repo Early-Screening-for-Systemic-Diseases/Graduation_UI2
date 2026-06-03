@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import '../../../core/service/service_locator.dart';
 import '../viewmodel/prediction_cubit.dart';
 import '../viewmodel/prediction_state.dart';
@@ -33,120 +35,261 @@ class _TextPredictionScreenState extends State<TextPredictionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1E1E2E) : Colors.white;
+    final fieldFill = isDark ? const Color(0xFF2A2A3A) : Colors.grey.shade50;
+    final borderColor = isDark ? const Color(0xFF3A3A5A) : Colors.grey.shade200;
+
     return BlocProvider.value(
       value: _cubit,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Symptom Analysis'),
-          backgroundColor: Colors.teal,
-        ),
-        body: BlocListener<PredictionCubit, PredictionState>(
-          listener: (context, state) {
-            if (state is TextPredictionSuccess) {
-              if (widget.filterDisease != null) {
-                final normalizedFilter =
-                    widget.filterDisease!.toLowerCase().replaceAll(' ', '');
-                final normalizedPrediction =
-                    state.response.prediction.toLowerCase().replaceAll(' ', '');
+      child: BlocListener<PredictionCubit, PredictionState>(
+        listener: (context, state) {
+          if (state is TextPredictionSuccess) {
+            if (widget.filterDisease != null) {
+              final normalizedFilter =
+                  widget.filterDisease!.toLowerCase().replaceAll(' ', '');
+              final normalizedPrediction =
+                  state.response.prediction.toLowerCase().replaceAll(' ', '');
 
-                if (normalizedPrediction == normalizedFilter) {
-                  final detail = state.response.toDiseaseDetail();
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        if (normalizedFilter == 'skincancer') {
-                          return SkinCancerDetailScreen(detail: detail);
-                        }
-                        return DiabetesDetailScreen(detail: detail);
-                      },
-                    ),
-                  );
-                } else {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('No Match Found'),
-                      content: Text(
-                        'Your symptoms don\'t match ${widget.filterDisease} indicators. Please try describing your symptoms in more detail or consult a healthcare professional.',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Try Again'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              } else {
-                Navigator.push(
+              if (normalizedPrediction == normalizedFilter) {
+                final detail = state.response.toDiseaseDetail();
+                Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => DiseaseDetailScreen(response: state.response),
+                    builder: (context) {
+                      if (normalizedFilter == 'skincancer') {
+                        return SkinCancerDetailScreen(detail: detail);
+                      }
+                      return DiabetesDetailScreen(detail: detail);
+                    },
+                  ),
+                );
+              } else {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('No Match Found'),
+                    content: Text(
+                      'Your symptoms don\'t match ${widget.filterDisease} indicators. '
+                      'Please try describing your symptoms in more detail or consult a healthcare professional.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Try Again'),
+                      ),
+                    ],
                   ),
                 );
               }
-            } else if (state is PredictionError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DiseaseDetailScreen(response: state.response),
+                ),
               );
             }
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text(
-                  'Describe Your Symptoms',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          } else if (state is PredictionError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          }
+        },
+        child: Scaffold(
+        body: CustomScrollView(
+          slivers: [
+            // ── Gradient App Bar ──────────────────────────────
+            SliverAppBar(
+              expandedHeight: 130.h,
+              pinned: true,
+              backgroundColor: Colors.teal,
+              leading: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  margin: EdgeInsets.all(8.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: const Icon(Icons.arrow_back_rounded, color: Colors.white),
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Tell us how you\'re feeling in your own words',
-                  style: TextStyle(color: Colors.grey),
-                ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: _textController,
-                  maxLines: 6,
-                  decoration: InputDecoration(
-                    hintText: 'e.g., I am really tired and feel weak...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+              ),
+              flexibleSpace: FlexibleSpaceBar(
+                background: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF00695C), Colors.teal],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    filled: true,
-                    fillColor: Colors.grey[100],
+                  ),
+                  child: Align(
+                    alignment: Alignment.bottomLeft,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('💬', style: TextStyle(fontSize: 28.sp)),
+                          SizedBox(height: 4.h),
+                          Text(
+                            'Symptom Analysis',
+                            style: TextStyle(
+                              fontSize: 20.sp,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            'Describe how you feel in your own words',
+                            style: TextStyle(fontSize: 12.sp, color: Colors.white70),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                BlocBuilder<PredictionCubit, PredictionState>(
-                  builder: (context, state) {
-                    return ElevatedButton(
-                      onPressed: state is PredictionLoading
-                          ? null
-                          : () {
-                              if (_textController.text.trim().isNotEmpty) {
-                                _cubit.predictFromText(_textController.text.trim());
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: state is PredictionLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              'Analyze Symptoms',
-                              style: TextStyle(fontSize: 16, color: Colors.white),
-                            ),
-                    );
-                  },
-                ),
-              ],
+              ),
             ),
-          ),
+
+            // ── Content ───────────────────────────────────────
+            SliverPadding(
+              padding: EdgeInsets.all(20.w),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  // Section header
+                  Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(6.w),
+                        decoration: BoxDecoration(
+                          color: Colors.teal.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: Icon(Icons.edit_note_rounded, color: Colors.teal, size: 16.sp),
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        'Your Symptoms',
+                        style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 14.h),
+
+                  // Text field card
+                  Container(
+                    padding: EdgeInsets.all(14.w),
+                    decoration: BoxDecoration(
+                      color: cardBg,
+                      borderRadius: BorderRadius.circular(14.r),
+                      border: Border.all(color: borderColor),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Describe your symptoms',
+                          style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500),
+                        ),
+                        SizedBox(height: 10.h),
+                        TextField(
+                          controller: _textController,
+                          maxLines: 6,
+                          style: TextStyle(fontSize: 14.sp),
+                          decoration: InputDecoration(
+                            hintText: 'e.g., I am really tired and feel weak, my skin looks pale...',
+                            hintStyle: TextStyle(
+                              color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
+                              fontSize: 13.sp,
+                            ),
+                            filled: true,
+                            fillColor: fieldFill,
+                            contentPadding: EdgeInsets.all(14.w),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.r),
+                              borderSide: BorderSide(color: borderColor),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.r),
+                              borderSide: BorderSide(color: borderColor),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.r),
+                              borderSide: const BorderSide(color: Colors.teal),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  SizedBox(height: 32.h),
+
+                  // Submit button
+                  BlocBuilder<PredictionCubit, PredictionState>(
+                    builder: (context, state) {
+                      final loading = state is PredictionLoading;
+                      return DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF00695C), Colors.teal],
+                          ),
+                          borderRadius: BorderRadius.circular(16.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.teal.withValues(alpha: 0.4),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton(
+                          onPressed: loading
+                              ? null
+                              : () {
+                                  if (_textController.text.trim().isNotEmpty) {
+                                    _cubit.predictFromText(_textController.text.trim());
+                                  }
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            minimumSize: Size(double.infinity, 54.h),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16.r),
+                            ),
+                          ),
+                          child: loading
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.auto_awesome_rounded, color: Colors.white),
+                                    SizedBox(width: 8.w),
+                                    Text(
+                                      'Analyze Symptoms',
+                                      style: TextStyle(
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      );
+                    },
+                  ),
+
+                  SizedBox(height: 32.h),
+                ]),
+              ),
+            ),
+          ],
+        ),
         ),
       ),
     );

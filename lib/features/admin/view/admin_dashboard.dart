@@ -10,6 +10,7 @@ import '../../auth/presentation/view/login.dart';
 import '../viewmodel/admin_cubit.dart';
 import '../viewmodel/admin_state.dart';
 import '../widgets/user_form_dialog.dart';
+import 'admin_profile_screen.dart';
 
 // ── Palette ──────────────────────────────────────────────────────────────────
 const _bg = Color(0xFF0A0E1A);
@@ -51,23 +52,25 @@ class _AdminDashboardViewState extends State<_AdminDashboardView> {
       appBar: _buildAppBar(context),
       floatingActionButton: _selectedIndex == 0 ? _buildFab(context) : null,
       bottomNavigationBar: _buildBottomNav(),
-      body: _selectedIndex == 0
-          ? BlocConsumer<AdminCubit, AdminState>(
-              listener: (context, state) {
-                if (state is AdminError) {
-                  _showSnack(context, state.message, isError: true);
-                } else if (state is AdminSuccess) {
-                  _showSnack(context, state.message);
-                }
-              },
-              builder: (context, state) {
-                if (state is AdminLoading) return _buildLoading();
-                if (state is AdminError) return _buildError(context, state.message);
-                if (state is AdminLoaded) return _buildContent(context, state);
-                return const SizedBox();
-              },
-            )
-          : const _ModelPerformancePage(),
+      body: switch (_selectedIndex) {
+        1 => const _ModelPerformancePage(),
+        2 => const AdminProfileScreen(),
+        _ => BlocConsumer<AdminCubit, AdminState>(
+            listener: (context, state) {
+              if (state is AdminError) {
+                _showSnack(context, state.message, isError: true);
+              } else if (state is AdminSuccess) {
+                _showSnack(context, state.message);
+              }
+            },
+            builder: (context, state) {
+              if (state is AdminLoading) return _buildLoading();
+              if (state is AdminError) return _buildError(context, state.message);
+              if (state is AdminLoaded) return _buildContent(context, state);
+              return const SizedBox();
+            },
+          ),
+      },
     );
   }
 
@@ -100,6 +103,12 @@ class _AdminDashboardViewState extends State<_AdminDashboardView> {
             label: 'Performance',
             selected: _selectedIndex == 1,
             onTap: () => setState(() => _selectedIndex = 1),
+          ),
+          _AdminNavItem(
+            icon: Icons.person_rounded,
+            label: 'Profile',
+            selected: _selectedIndex == 2,
+            onTap: () => setState(() => _selectedIndex = 2),
           ),
         ],
       ),

@@ -32,8 +32,9 @@ class _BinaryChoiceWidgetState extends State<BinaryChoiceWidget> {
     _value = widget.initialValue;
   }
 
-  Widget _btn(String label, int val) {
+  Widget _btn(String label, int val, BuildContext context) {
     final selected = _value == val;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -46,7 +47,9 @@ class _BinaryChoiceWidgetState extends State<BinaryChoiceWidget> {
           decoration: BoxDecoration(
             color: selected ? widget.color : Colors.transparent,
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: selected ? widget.color : Colors.grey.shade300),
+            border: Border.all(
+              color: selected ? widget.color : (isDark ? Colors.grey.shade700 : Colors.grey.shade300),
+            ),
           ),
           child: Text(
             label,
@@ -54,7 +57,7 @@ class _BinaryChoiceWidgetState extends State<BinaryChoiceWidget> {
             style: TextStyle(
               fontSize: 14.sp,
               fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : Colors.grey.shade600,
+              color: selected ? Colors.white : (isDark ? Colors.grey.shade400 : Colors.grey.shade600),
             ),
           ),
         ),
@@ -64,12 +67,13 @@ class _BinaryChoiceWidgetState extends State<BinaryChoiceWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: isDark ? const Color(0xFF2C2C2C) : Colors.grey.shade200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,9 +82,9 @@ class _BinaryChoiceWidgetState extends State<BinaryChoiceWidget> {
           SizedBox(height: 12.h),
           Row(
             children: [
-              _btn(widget.noLabel, 0),
+              _btn(widget.noLabel, 0, context),
               SizedBox(width: 8.w),
-              _btn(widget.yesLabel, 1),
+              _btn(widget.yesLabel, 1, context),
             ],
           ),
         ],

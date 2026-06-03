@@ -249,27 +249,9 @@ class _DiabetesAnalysisScreenState extends State<DiabetesAnalysisScreen> {
                       // ── Step 3: Symptoms Text ──────────────────────
                       const StepHeader(step: '3', title: 'Describe Your Symptoms', color: _color),
                       SizedBox(height: 12.h),
-                      TextField(
+                      _DiabetesSymptomsField(
                         controller: _textController,
-                        maxLines: 4,
-                        decoration: InputDecoration(
-                          hintText:
-                              'e.g., I feel very thirsty, frequent urination, blurred vision...',
-                          filled: true,
-                          fillColor: Colors.grey.shade50,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14.r),
-                            borderSide: BorderSide(color: Colors.grey.shade200),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14.r),
-                            borderSide: BorderSide(color: Colors.grey.shade200),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14.r),
-                            borderSide: const BorderSide(color: _color),
-                          ),
-                        ),
+                        accentColor: _color,
                       ),
                       SizedBox(height: 32.h),
                     ] else
@@ -331,6 +313,66 @@ class _DiabetesAnalysisScreenState extends State<DiabetesAnalysisScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DiabetesSymptomsField extends StatelessWidget {
+  final TextEditingController controller;
+  final Color accentColor;
+
+  const _DiabetesSymptomsField({
+    required this.controller,
+    required this.accentColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1E1E2E) : Colors.white;
+    final fieldFill = isDark ? const Color(0xFF2A2A3A) : Colors.grey.shade50;
+    final borderColor = isDark ? const Color(0xFF3A3A5A) : Colors.grey.shade200;
+    return Container(
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Describe your symptoms',
+            style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500),
+          ),
+          SizedBox(height: 10.h),
+          TextField(
+            controller: controller,
+            maxLines: 4,
+            style: TextStyle(fontSize: 14.sp),
+            decoration: InputDecoration(
+              hintText:
+                  'e.g., I feel very thirsty, frequent urination, blurred vision...',
+              hintStyle: TextStyle(
+                  color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
+                  fontSize: 13.sp),
+              filled: true,
+              fillColor: fieldFill,
+              contentPadding: EdgeInsets.all(14.w),
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: borderColor)),
+              enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: borderColor)),
+              focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: accentColor)),
+            ),
+          ),
+        ],
       ),
     );
   }

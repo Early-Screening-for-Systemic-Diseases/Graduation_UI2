@@ -33,12 +33,15 @@ class _AgeSelectorWidgetState extends State<AgeSelectorWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fillColor = isDark ? const Color(0xFF2A2A3A) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF3A3A5A) : Colors.grey.shade200;
     return Container(
       padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: isDark ? const Color(0xFF1E1E2E) : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: isDark ? const Color(0xFF3A3A5A) : Colors.grey.shade200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,17 +50,18 @@ class _AgeSelectorWidgetState extends State<AgeSelectorWidget> {
           SizedBox(height: 10.h),
           DropdownButtonFormField<int>(
             value: _value,
+            dropdownColor: isDark ? const Color(0xFF1E1E2E) : null,
             decoration: InputDecoration(
               filled: true,
-              fillColor: Colors.white,
+              fillColor: fillColor,
               contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12.r),
-                borderSide: BorderSide(color: Colors.grey.shade200),
+                borderSide: BorderSide(color: borderColor),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12.r),
-                borderSide: BorderSide(color: Colors.grey.shade200),
+                borderSide: BorderSide(color: borderColor),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12.r),

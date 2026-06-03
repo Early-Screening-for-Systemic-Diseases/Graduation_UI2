@@ -137,6 +137,8 @@ class _HistoryCard extends StatelessWidget {
     final isHigh = score >= 50;
     final riskColor = isHigh ? Colors.red : Colors.green;
     final riskLabel = isHigh ? 'High Risk' : 'Low Risk';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final borderColor = isDark ? const Color(0xFF3A3A5A) : Colors.grey.shade100;
 
     return GestureDetector(
       onTap: () => Navigator.push(
@@ -146,11 +148,11 @@ class _HistoryCard extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
           borderRadius: BorderRadius.circular(18.r),
-          border: Border.all(color: Colors.grey.shade100),
+          border: Border.all(color: borderColor),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
           ],
         ),
         child: Column(
@@ -176,20 +178,20 @@ class _HistoryCard extends StatelessWidget {
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
+                          color: isDark ? const Color(0xFF2C2C2C) : Colors.grey.shade200,
                           borderRadius: BorderRadius.circular(20.r),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.bolt_rounded, size: 11.sp, color: Colors.grey.shade600),
+                            Icon(Icons.bolt_rounded, size: 11.sp, color: Colors.grey),
                             SizedBox(width: 2.w),
                             Text(
                               'Fast',
                               style: TextStyle(
                                 fontSize: 11.sp,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.grey.shade600,
+                                color: Colors.grey,
                               ),
                             ),
                           ],
@@ -261,7 +263,7 @@ class _HistoryCard extends StatelessWidget {
                   height: 80.h,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  placeholder: Container(color: Colors.grey.shade200),
+                  placeholder: Container(color: isDark ? const Color(0xFF2C2C2C) : Colors.grey.shade200),
                 ),
               ),
             ],
@@ -310,6 +312,7 @@ class _MiniBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       children: [
         SizedBox(
@@ -322,8 +325,8 @@ class _MiniBar extends StatelessWidget {
             child: LinearProgressIndicator(
               value: value / 100,
               minHeight: 5.h,
-              backgroundColor: Colors.grey.shade100,
-              valueColor: AlwaysStoppedAnimation<Color>(color.withOpacity(0.7)),
+              backgroundColor: isDark ? const Color(0xFF2C2C2C) : Colors.grey.shade100,
+              valueColor: AlwaysStoppedAnimation<Color>(color.withValues(alpha: 0.7)),
             ),
           ),
         ),
@@ -378,9 +381,12 @@ class _HistoryDetailScreen extends StatelessWidget {
     final score = result.finalScore;
     final isHigh = score >= 50;
     final riskColor = isHigh ? Colors.red : Colors.green;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceVariant = isDark ? const Color(0xFF2C2C2C) : Colors.grey.shade200;
+    final secondaryText = isDark ? Colors.grey.shade400 : Colors.grey.shade700;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: color,
         title: Text(
@@ -392,7 +398,7 @@ class _HistoryDetailScreen extends StatelessWidget {
           child: Container(
             margin: EdgeInsets.all(8.w),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: const Icon(Icons.arrow_back_rounded, color: Colors.white),
@@ -406,9 +412,9 @@ class _HistoryDetailScreen extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(24.w),
             decoration: BoxDecoration(
-              color: riskColor.withOpacity(0.06),
+              color: riskColor.withValues(alpha: isDark ? 0.12 : 0.06),
               borderRadius: BorderRadius.circular(20.r),
-              border: Border.all(color: riskColor.withOpacity(0.2), width: 1.5),
+              border: Border.all(color: riskColor.withValues(alpha: 0.2), width: 1.5),
             ),
             child: Column(
               children: [
@@ -420,7 +426,7 @@ class _HistoryDetailScreen extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 5.h),
                   decoration: BoxDecoration(
-                    color: riskColor.withOpacity(0.12),
+                    color: riskColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20.r),
                   ),
                   child: Text(
@@ -434,7 +440,7 @@ class _HistoryDetailScreen extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: score / 100,
                     minHeight: 8.h,
-                    backgroundColor: Colors.grey.shade200,
+                    backgroundColor: surfaceVariant,
                     valueColor: AlwaysStoppedAnimation<Color>(riskColor),
                   ),
                 ),
@@ -484,7 +490,7 @@ class _HistoryDetailScreen extends StatelessWidget {
                       height: 160.h,
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      placeholder: Container(color: Colors.grey.shade200),
+                      placeholder: Container(color: surfaceVariant),
                     ),
                   ),
                 SizedBox(height: 10.h),
@@ -527,7 +533,7 @@ class _HistoryDetailScreen extends StatelessWidget {
               color: color,
               child: Text(
                 result.textDescription,
-                style: TextStyle(fontSize: 13.sp, color: Colors.grey.shade700, height: 1.6),
+                style: TextStyle(fontSize: 13.sp, color: secondaryText, height: 1.6),
               ),
             ),
 
@@ -553,9 +559,9 @@ class _HistoryDetailScreen extends StatelessWidget {
                         .map((s) => Container(
                               padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                               decoration: BoxDecoration(
-                                color: color.withOpacity(0.1),
+                                color: color.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(20.r),
-                                border: Border.all(color: color.withOpacity(0.3)),
+                                border: Border.all(color: color.withValues(alpha: 0.3)),
                               ),
                               child: Text(s.toString(), style: TextStyle(fontSize: 11.sp, color: color)),
                             ))
@@ -577,7 +583,7 @@ class _HistoryDetailScreen extends StatelessWidget {
                 children: [
                   Text(
                     result.doctorFeedback,
-                    style: TextStyle(fontSize: 13.sp, color: Colors.grey.shade700, height: 1.6),
+                    style: TextStyle(fontSize: 13.sp, color: secondaryText, height: 1.6),
                   ),
                   SizedBox(height: 12.h),
                   _DoctorRatingRow(doctorId: result.doctorId),
@@ -615,13 +621,14 @@ class _DetailSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Colors.grey.shade100),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 3))],
+        border: Border.all(color: isDark ? const Color(0xFF3A3A5A) : Colors.grey.shade100),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 3))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -653,9 +660,10 @@ class _ScoreDetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       children: [
-        Expanded(child: Text(label, style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade700))),
+        Expanded(child: Text(label, style: TextStyle(fontSize: 12.sp, color: isDark ? Colors.grey.shade400 : Colors.grey.shade700))),
         SizedBox(width: 8.w),
         SizedBox(
           width: 80.w,
@@ -664,8 +672,8 @@ class _ScoreDetailRow extends StatelessWidget {
             child: LinearProgressIndicator(
               value: score / 100,
               minHeight: 6.h,
-              backgroundColor: Colors.grey.shade100,
-              valueColor: AlwaysStoppedAnimation<Color>(color.withOpacity(0.7)),
+              backgroundColor: isDark ? const Color(0xFF2C2C2C) : Colors.grey.shade100,
+              valueColor: AlwaysStoppedAnimation<Color>(color.withValues(alpha: 0.7)),
             ),
           ),
         ),
@@ -690,7 +698,7 @@ class _KVRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 130.w,
-            child: Text(k, style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade500)),
+            child: Text(k, style: TextStyle(fontSize: 12.sp, color: Colors.grey)),
           ),
           Expanded(
             child: Text(v, style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w500)),

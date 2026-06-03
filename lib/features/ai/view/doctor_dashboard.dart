@@ -13,6 +13,7 @@ import '../../auth/presentation/view/login.dart';
 import '../../chat/chat_list_screen.dart';
 import '../../chat/rating_widget.dart';
 import '../../../core/service/backend_service.dart';
+import 'doctor_profile_screen.dart';
 import 'training_data_section.dart';
 
 class DoctorDashboard extends StatefulWidget {
@@ -27,7 +28,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final screens = [_PatientsTab(), const ChatListScreen()];
+    final screens = [_PatientsTab(), const ChatListScreen(), const DoctorProfileScreen()];
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E1A),
       body: screens[_selectedIndex],
@@ -39,7 +40,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
           borderRadius: BorderRadius.circular(28.r),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 20,
               offset: const Offset(0, 4),
             ),
@@ -50,6 +51,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
           children: [
             _NavItem(icon: Icons.people_alt_rounded, label: 'Patients', selected: _selectedIndex == 0, onTap: () => setState(() => _selectedIndex = 0)),
             _NavItem(icon: Icons.chat_bubble_outline_rounded, label: 'Chat', selected: _selectedIndex == 1, onTap: () => setState(() => _selectedIndex = 1)),
+            _NavItem(icon: Icons.person_rounded, label: 'Profile', selected: _selectedIndex == 2, onTap: () => setState(() => _selectedIndex = 2)),
           ],
         ),
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../core/theme/theme_cubit.dart';
 import '../../../features/auth/domain/entities/user_entity.dart';
 import '../../../features/auth/presentation/cubit/auth_hydrated_cubit.dart';
 import '../../../features/auth/presentation/cubit/auth_state.dart';
@@ -18,7 +19,7 @@ class ProfileScreen extends StatelessWidget {
         builder: (context, state) {
           final user = state is Authenticated ? state.user : null;
           return Scaffold(
-          backgroundColor: const Color(0xFFF8FAFC),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: Column(
             children: [
               // ── Gradient Header ──────────────────────────────────
@@ -105,6 +106,9 @@ class ProfileScreen extends StatelessWidget {
                         value: (user?.role.name ?? 'patient')[0].toUpperCase() + (user?.role.name ?? 'patient').substring(1),
                         color: const Color(0xFF00897B),
                       ),
+
+                      SizedBox(height: 12.h),
+                      const _ThemeToggleCard(),
 
                       // ── Privacy & Consent (patients only) ───────
                       if (user != null && user.role == UserRole.patient) ...[
@@ -219,14 +223,15 @@ class _InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: isDark ? const Color(0xFF3A3A5A) : Colors.grey.shade100),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 3)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 3)),
         ],
       ),
       child: Row(
@@ -234,7 +239,7 @@ class _InfoCard extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(10.w),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Icon(icon, color: color, size: 20.sp),
@@ -245,11 +250,74 @@ class _InfoCard extends StatelessWidget {
             children: [
               Text(label, style: TextStyle(fontSize: 11.sp, color: Colors.grey, fontWeight: FontWeight.w500)),
               SizedBox(height: 2.h),
-              Text(value, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: Colors.black87)),
+              Text(value, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black87)),
             ],
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ThemeToggleCard extends StatelessWidget {
+  const _ThemeToggleCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ThemeCubit, ThemeMode>(
+      builder: (context, themeMode) {
+        final isDark = themeMode == ThemeMode.dark;
+        final iconColor = isDark ? const Color(0xFF7986CB) : const Color(0xFFFF9800);
+        return Container(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: isDark ? const Color(0xFF3A3A5A) : Colors.grey.shade100),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 3)),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(10.w),
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Icon(
+                  isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                  color: iconColor,
+                  size: 20.sp,
+                ),
+              ),
+              SizedBox(width: 14.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Appearance', style: TextStyle(fontSize: 11.sp, color: Colors.grey, fontWeight: FontWeight.w500)),
+                    SizedBox(height: 2.h),
+                    Text(
+                      isDark ? 'Dark Mode' : 'Light Mode',
+                      style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black87),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: isDark,
+                onChanged: (_) => context.read<ThemeCubit>().toggleTheme(),
+                activeThumbColor: const Color(0xFF7986CB),
+                activeTrackColor: const Color(0xFF7986CB).withValues(alpha: 0.3),
+                inactiveThumbColor: Colors.grey.shade400,
+                inactiveTrackColor: Colors.grey.shade200,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
