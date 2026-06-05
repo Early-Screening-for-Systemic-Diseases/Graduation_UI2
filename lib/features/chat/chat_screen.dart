@@ -166,19 +166,20 @@ class _ChatScreenState extends State<ChatScreen> {
                       horizontal: 16.w, vertical: 12.h),
                   itemCount: docs.length,
                   itemBuilder: (_, i) {
-                    final data =
-                        docs[i].data() as Map<String, dynamic>;
-                    final isMe =
-                        data['senderId'] == widget.currentUserId;
+                    final doc = docs[i];
+                    final data = doc.data() as Map<String, dynamic>;
+                    final isMe = data['senderId'] == widget.currentUserId;
                     final ts = data['timestamp'] as Timestamp?;
                     final time = ts != null
-                        ? TimeOfDay.fromDateTime(ts.toDate())
-                            .format(context)
+                        ? TimeOfDay.fromDateTime(ts.toDate()).format(context)
                         : '';
                     return _MessageBubble(
-                        text: data['text'] ?? '',
-                        isMe: isMe,
-                        time: time);
+                      text: data['text'] ?? '',
+                      isMe: isMe,
+                      time: time,
+                      docId: doc.id,
+                      messagesRef: _messages,
+                    );
                   },
                 );
               },
@@ -243,47 +244,164 @@ class _MessageBubble extends StatelessWidget {
   final String text;
   final bool isMe;
   final String time;
+  final String docId;
+  final CollectionReference messagesRef;
 
-  const _MessageBubble(
-      {required this.text, required this.isMe, required this.time});
+  const _MessageBubble({
+    required this.text,
+    required this.isMe,
+    required this.time,
+    required this.docId,
+    required this.messagesRef,
+  });
 
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: EdgeInsets.only(bottom: 8.h),
-        constraints: BoxConstraints(maxWidth: 0.72.sw),
-        padding:
-            EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+  Future<void> _confirmDelete(BuildContext context) async {
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 32.h),
         decoration: BoxDecoration(
-          color: isMe
-              ? const Color(0xFF00E5FF).withOpacity(0.15)
-              : const Color(0xFF1A2235),
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(16.r),
-            topRight: Radius.circular(16.r),
-            bottomLeft: Radius.circular(isMe ? 16.r : 4.r),
-            bottomRight: Radius.circular(isMe ? 4.r : 16.r),
-          ),
-          border: Border.all(
-            color: isMe
-                ? const Color(0xFF00E5FF).withOpacity(0.3)
-                : const Color(0xFF1E2D45),
+          color: const Color(0xFF1A2235),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+          border: Border(
+            top: BorderSide(
+                color: const Color(0xFF00E5FF).withValues(alpha: 0.2)),
           ),
         ),
         child: Column(
-          crossAxisAlignment:
-              isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(text,
-                style:
-                    TextStyle(color: Colors.white, fontSize: 13.sp)),
-            SizedBox(height: 4.h),
-            Text(time,
+            // drag handle
+            Container(
+              width: 36.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+            SizedBox(height: 20.h),
+            Container(
+              padding: EdgeInsets.all(14.r),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.delete_outline_rounded,
+                  color: Colors.redAccent, size: 28.sp),
+            ),
+            SizedBox(height: 14.h),
+            Text('Delete message?',
                 style: TextStyle(
-                    color: Colors.white38, fontSize: 10.sp)),
+                    color: Colors.white,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w700)),
+            SizedBox(height: 6.h),
+            Text('This will be removed for everyone.',
+                style: TextStyle(color: Colors.white38, fontSize: 13.sp)),
+            SizedBox(height: 24.h),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 14.h),
+                      decoration: BoxDecoration(
+                        color: Colors.white12,
+                        borderRadius: BorderRadius.circular(14.r),
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text('Cancel',
+                          style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () async {
+                      Navigator.pop(context);
+                      await messagesRef.doc(docId).delete();
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 14.h),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(14.r),
+                        border: Border.all(
+                            color: Colors.redAccent.withValues(alpha: 0.5)),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text('Delete',
+                          style: TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onLongPress: isMe ? () => _confirmDelete(context) : null,
+      child: Align(
+        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          margin: EdgeInsets.only(bottom: 8.h),
+          constraints: BoxConstraints(maxWidth: 0.72.sw),
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+          decoration: BoxDecoration(
+            color: isMe
+                ? const Color(0xFF00E5FF).withValues(alpha: 0.15)
+                : const Color(0xFF1A2235),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(16.r),
+              topRight: Radius.circular(16.r),
+              bottomLeft: Radius.circular(isMe ? 16.r : 4.r),
+              bottomRight: Radius.circular(isMe ? 4.r : 16.r),
+            ),
+            border: Border.all(
+              color: isMe
+                  ? const Color(0xFF00E5FF).withValues(alpha: 0.3)
+                  : const Color(0xFF1E2D45),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment:
+                isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            children: [
+              Text(text,
+                  style: TextStyle(color: Colors.white, fontSize: 13.sp)),
+              SizedBox(height: 4.h),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(time,
+                      style:
+                          TextStyle(color: Colors.white38, fontSize: 10.sp)),
+                  if (isMe) ...[
+                    SizedBox(width: 6.w),
+                    Icon(Icons.touch_app_rounded,
+                        color: Colors.white24, size: 10.sp),
+                  ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

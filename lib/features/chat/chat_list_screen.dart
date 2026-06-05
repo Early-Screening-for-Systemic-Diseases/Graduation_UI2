@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../core/providers/ui_providers.dart';
 import '../auth/presentation/cubit/auth_hydrated_cubit.dart';
 import '../auth/presentation/cubit/auth_state.dart';
 import 'chat_screen.dart';
@@ -64,7 +66,7 @@ class ChatListScreen extends StatelessWidget {
 
 // ── Patient view: list all doctors ───────────────────────────────────────────
 
-class _PatientChatList extends StatelessWidget {
+class _PatientChatList extends ConsumerWidget {
   final String patientId;
   final String patientName;
 
@@ -72,7 +74,9 @@ class _PatientChatList extends StatelessWidget {
       {required this.patientId, required this.patientName});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dismissedIds = ref.watch(dismissedChatsProvider);
+
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
           .collection('users')
@@ -81,8 +85,7 @@ class _PatientChatList extends StatelessWidget {
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return const Center(
-              child:
-                  CircularProgressIndicator(color: Color(0xFF00E5FF)));
+              child: CircularProgressIndicator(color: Color(0xFF00E5FF)));
         }
         final data = snapshot.data!.data() as Map<String, dynamic>?;
         final rawResults = (data?['combinedResults'] as List<dynamic>?) ?? [];
@@ -97,7 +100,7 @@ class _PatientChatList extends StatelessWidget {
             .toList();
 
         if (doctorIds.isEmpty) {
-          return _EmptyState(
+          return const _EmptyState(
               message:
                   'No doctor chats available yet. You will see doctors after they give feedback.');
         }
@@ -126,32 +129,41 @@ class _PatientChatList extends StatelessWidget {
                   .where((doc) => doctorIds.contains(doc.id))
                   .toList();
             }
-            if (doctors.isEmpty) {
-              return _EmptyState(
+            final visible = doctors
+                .where((doc) => !dismissedIds.contains(doc.id))
+                .toList();
+            if (visible.isEmpty) {
+              return const _EmptyState(
                   message:
                       'No doctor chats available yet. You will see doctors after they give feedback.');
             }
             return ListView.separated(
               padding: EdgeInsets.all(16.w),
-              itemCount: doctors.length,
+              itemCount: visible.length,
               separatorBuilder: (_, __) => SizedBox(height: 10.h),
               itemBuilder: (_, i) {
-                final data = doctors[i].data() as Map<String, dynamic>;
-                final doctorId = data['id'] as String? ?? doctors[i].id;
-                final doctorName = data['name'] as String? ?? 'Doctor';
-                return _ChatTile(
+                final docData = visible[i].data() as Map<String, dynamic>;
+                final doctorId = docData['id'] as String? ?? visible[i].id;
+                final doctorName = docData['name'] as String? ?? 'Doctor';
+                return _buildDismissible(
+                  context: context,
+                  ref: ref,
+                  id: doctorId,
                   name: doctorName,
-                  subtitle: data['email'] as String? ?? '',
-                  rateeId: doctorId,
-                  raterId: patientId,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChatScreen(
-                        currentUserId: patientId,
-                        currentUserName: patientName,
-                        otherUserId: doctorId,
-                        otherUserName: doctorName,
+                  child: _ChatTile(
+                    name: doctorName,
+                    subtitle: docData['email'] as String? ?? '',
+                    rateeId: doctorId,
+                    raterId: patientId,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ChatScreen(
+                          currentUserId: patientId,
+                          currentUserName: patientName,
+                          otherUserId: doctorId,
+                          otherUserName: doctorName,
+                        ),
                       ),
                     ),
                   ),
@@ -167,7 +179,7 @@ class _PatientChatList extends StatelessWidget {
 
 // ── Doctor view: list all patients ──────────────────────────────────────────
 
-class _DoctorChatList extends StatelessWidget {
+class _DoctorChatList extends ConsumerWidget {
   final String doctorId;
   final String doctorName;
 
@@ -175,7 +187,9 @@ class _DoctorChatList extends StatelessWidget {
       {required this.doctorId, required this.doctorName});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dismissedIds = ref.watch(dismissedChatsProvider);
+
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('users')
@@ -184,10 +198,9 @@ class _DoctorChatList extends StatelessWidget {
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return const Center(
-              child:
-                  CircularProgressIndicator(color: Color(0xFF00E5FF)));
+              child: CircularProgressIndicator(color: Color(0xFF00E5FF)));
         }
-        final patients = snapshot.data!.docs.where((doc) {
+        final allPatients = snapshot.data!.docs.where((doc) {
           final data = doc.data() as Map<String, dynamic>;
           final rawResults = (data['combinedResults'] as List<dynamic>?) ?? [];
           return rawResults
@@ -197,8 +210,12 @@ class _DoctorChatList extends StatelessWidget {
                   (r['doctorId'] as String? ?? '') == doctorId);
         }).toList();
 
+        final patients = allPatients
+            .where((doc) => !dismissedIds.contains(doc.id))
+            .toList();
+
         if (patients.isEmpty) {
-          return _EmptyState(
+          return const _EmptyState(
               message:
                   'No patients available yet. You will see patients after you submit feedback.');
         }
@@ -211,19 +228,25 @@ class _DoctorChatList extends StatelessWidget {
             final patientId = data['id'] as String? ?? patients[i].id;
             final patientName = data['name'] as String? ?? 'Patient';
             final email = data['email'] as String? ?? '';
-            return _ChatTile(
+            return _buildDismissible(
+              context: context,
+              ref: ref,
+              id: patientId,
               name: patientName,
-              subtitle: email,
-              rateeId: patientId,
-              raterId: doctorId,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ChatScreen(
-                    currentUserId: doctorId,
-                    currentUserName: doctorName,
-                    otherUserId: patientId,
-                    otherUserName: patientName,
+              child: _ChatTile(
+                name: patientName,
+                subtitle: email,
+                rateeId: patientId,
+                raterId: doctorId,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ChatScreen(
+                      currentUserId: doctorId,
+                      currentUserName: doctorName,
+                      otherUserId: patientId,
+                      otherUserName: patientName,
+                    ),
                   ),
                 ),
               ),
@@ -437,10 +460,73 @@ class _EmptyState extends StatelessWidget {
               color: Colors.white24, size: 52.sp),
           SizedBox(height: 12.h),
           Text(message,
-              style:
-                  TextStyle(color: Colors.white38, fontSize: 14.sp)),
+              style: TextStyle(color: Colors.white38, fontSize: 14.sp)),
         ],
       ),
     );
   }
+}
+
+// ── Shared dismissible builder ────────────────────────────────────────────────
+// Used by both patient and doctor list views.
+Widget _buildDismissible({
+  required BuildContext context,
+  required WidgetRef ref,
+  required String id,
+  required String name,
+  required Widget child,
+}) {
+  return Dismissible(
+    key: ValueKey(id),
+    direction: DismissDirection.endToStart,
+    background: Container(
+      alignment: Alignment.centerRight,
+      padding: EdgeInsets.only(right: 20.w),
+      decoration: BoxDecoration(
+        color: Colors.red.shade400,
+        borderRadius: BorderRadius.circular(14.r),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.delete_outline_rounded, color: Colors.white, size: 24.sp),
+          SizedBox(height: 4.h),
+          Text('Remove',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w600)),
+        ],
+      ),
+    ),
+    confirmDismiss: (_) async => true,
+    onDismissed: (_) {
+      ref.read(dismissedChatsProvider.notifier).state = {
+        ...ref.read(dismissedChatsProvider),
+        id,
+      };
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('$name removed from list'),
+            duration: const Duration(seconds: 4),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: const Color(0xFF1A2235),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r)),
+            action: SnackBarAction(
+              label: 'Undo',
+              textColor: const Color(0xFF00E5FF),
+              onPressed: () {
+                final current = ref.read(dismissedChatsProvider);
+                ref.read(dismissedChatsProvider.notifier).state =
+                    {...current}..remove(id);
+              },
+            ),
+          ),
+        );
+    },
+    child: child,
+  );
 }

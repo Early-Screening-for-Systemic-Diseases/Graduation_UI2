@@ -1,9 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import '../../auth/data/data_source/firebase_data_source/firebase_auth_data_source.dart';
 import '../../auth/data/models/user_model.dart';
+import '../../../core/providers/ui_providers.dart';
 import '../../../core/service/service_locator.dart';
 import '../../../core/widgets/local_or_network_image.dart';
 import 'analysis_history_screen.dart';
@@ -165,22 +167,77 @@ class _TabMeta {
 
 // ── Disease Tab ───────────────────────────────────────────────────────────────
 
-class _DiseaseTab extends StatelessWidget {
+class _DiseaseTab extends ConsumerWidget {
   final List<CombinedAnalysisResult> combinedResults;
   final _TabMeta meta;
 
   const _DiseaseTab({required this.combinedResults, required this.meta});
 
   @override
-  Widget build(BuildContext context) {
-    if (combinedResults.isEmpty) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dismissedIds = ref.watch(dismissedResultsProvider);
+    final visible = combinedResults
+        .where((r) => !dismissedIds.contains(r.timestamp.toIso8601String()))
+        .toList();
+
+    if (visible.isEmpty) {
       return _EmptyTab(meta: meta);
     }
+
     return ListView.separated(
       padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 24.h),
-      itemCount: combinedResults.length,
+      itemCount: visible.length,
       separatorBuilder: (_, __) => SizedBox(height: 14.h),
-      itemBuilder: (_, i) => _CombinedCard(result: combinedResults[i], meta: meta),
+      itemBuilder: (_, i) {
+        final result = visible[i];
+        final id = result.timestamp.toIso8601String();
+        return Dismissible(
+          key: ValueKey(id),
+          direction: DismissDirection.endToStart,
+          background: Container(
+            alignment: Alignment.centerRight,
+            padding: EdgeInsets.only(right: 20.w),
+            decoration: BoxDecoration(
+              color: Colors.red.shade400,
+              borderRadius: BorderRadius.circular(18.r),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.delete_outline_rounded, color: Colors.white, size: 26.sp),
+                SizedBox(height: 4.h),
+                Text('Remove', style: TextStyle(color: Colors.white, fontSize: 11.sp, fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+          confirmDismiss: (_) async => true,
+          onDismissed: (_) {
+            ref.read(dismissedResultsProvider.notifier).state = {
+              ...ref.read(dismissedResultsProvider),
+              id,
+            };
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  content: const Text('Result removed'),
+                  duration: const Duration(seconds: 4),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                  action: SnackBarAction(
+                    label: 'Undo',
+                    onPressed: () {
+                      final current = ref.read(dismissedResultsProvider);
+                      ref.read(dismissedResultsProvider.notifier).state =
+                          {...current}..remove(id);
+                    },
+                  ),
+                ),
+              );
+          },
+          child: _CombinedCard(result: result, meta: meta),
+        );
+      },
     );
   }
 }
@@ -214,19 +271,22 @@ class _EmptyTab extends StatelessWidget {
 
 // ── Combined Card ─────────────────────────────────────────────────────────────
 
-class _CombinedCard extends StatelessWidget {
+class _CombinedCard extends ConsumerWidget {
   final CombinedAnalysisResult result;
   final _TabMeta meta;
 
   const _CombinedCard({required this.result, required this.meta});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final score = result.finalScore;
     final isHigh = score >= 50;
     final riskColor = isHigh ? Colors.red : Colors.green;
     final imageUrl = result.imageRecord['imageUrl'] as String? ?? '';
     final hasImage = imageUrl.isNotEmpty;
+    final id = result.timestamp.toIso8601String();
+    final isFav = ref.watch(favoritesProvider).contains(id);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
       onTap: () => Navigator.push(
@@ -235,10 +295,15 @@ class _CombinedCard extends StatelessWidget {
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
           borderRadius: BorderRadius.circular(18.r),
-          border: Border.all(color: Colors.grey.shade100),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+          border: Border.all(
+            color: isFav
+                ? Colors.red.shade300
+                : isDark ? const Color(0xFF3A3A5A) : Colors.grey.shade100,
+            width: isFav ? 1.5 : 1,
+          ),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -366,9 +431,9 @@ class _CombinedCard extends StatelessWidget {
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                           decoration: BoxDecoration(
-                            color: Colors.teal.withOpacity(0.1),
+                            color: Colors.teal.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8.r),
-                            border: Border.all(color: Colors.teal.withOpacity(0.3)),
+                            border: Border.all(color: Colors.teal.withValues(alpha: 0.3)),
                           ),
                           child: Row(mainAxisSize: MainAxisSize.min, children: [
                             Icon(Icons.medical_services_rounded, size: 11.sp, color: Colors.teal),
@@ -380,6 +445,20 @@ class _CombinedCard extends StatelessWidget {
                         const SizedBox(),
                       Row(
                         children: [
+                          // ── Favourite button ──
+                          GestureDetector(
+                            onTap: () => ref.read(favoritesProvider.notifier).toggle(id),
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 200),
+                              child: Icon(
+                                isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                key: ValueKey(isFav),
+                                color: isFav ? Colors.red.shade400 : Colors.grey,
+                                size: 20.sp,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
                           Text('View details', style: TextStyle(fontSize: 12.sp, color: meta.color, fontWeight: FontWeight.w600)),
                           SizedBox(width: 3.w),
                           Icon(Icons.arrow_forward_ios_rounded, size: 11.sp, color: meta.color),
